@@ -2038,22 +2038,7 @@
 
   var LayerManager = function () {
     function LayerManager(map, Plugin) {
-      var _this = this;
-
       classCallCheck(this, LayerManager);
-
-      this.fitMapToLayer = function (layerId) {
-        if (typeof _this.plugin.fitMapToLayer !== 'function') {
-          console.error('This plugin does not support fitting map bounds to layer yet.');
-          return;
-        }
-
-        var layerModel = _this.layers.find(function (l) {
-          return l.id === layerId;
-        });
-
-        if (layerModel) _this.plugin.fitMapToLayer(layerModel);
-      };
 
       this.map = map;
       this.plugin = new Plugin(this.map);
@@ -2070,7 +2055,7 @@
     createClass(LayerManager, [{
       key: 'renderLayers',
       value: function renderLayers() {
-        var _this2 = this;
+        var _this = this;
 
         if (this.layers.length > 0) {
           this.layers.forEach(function (layerModel) {
@@ -2090,17 +2075,17 @@
 
               // In case has changed, just update it else if (
               if (layerModel.mapLayer && hasChanged) {
-                return _this2.updateLayer(layerModel);
+                return _this.updateLayer(layerModel);
               }
             }
 
             if (layerModel.mapLayer && shouldUpdate) {
-              _this2.updateLayer(layerModel);
+              _this.updateLayer(layerModel);
             }
 
             // adds a new promise to `this.promises` every time it gets called
-            _this2.requestLayer(layerModel);
-            _this2.requestLayerBounds(layerModel);
+            _this.requestLayer(layerModel);
+            _this.requestLayerBounds(layerModel);
 
             // reset changedAttributes
             return layerModel.set('changedAttributes', {});
@@ -2111,9 +2096,9 @@
           }
 
           return Promise.all(Object.values(this.promises)).then(function () {
-            return _this2.layers;
+            return _this.layers;
           }).then(function () {
-            _this2.promises = {};
+            _this.promises = {};
           });
         }
 
@@ -2130,7 +2115,7 @@
     }, {
       key: 'add',
       value: function add(layers) {
-        var _this3 = this;
+        var _this2 = this;
 
         var layerOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
           opacity: 1,
@@ -2150,7 +2135,7 @@
         }
 
         layers.forEach(function (layer) {
-          var existingLayer = _this3.layers.find(function (l) {
+          var existingLayer = _this2.layers.find(function (l) {
             return l.id === layer.id;
           });
           var nextModel = _extends({}, layer, layerOptions);
@@ -2158,7 +2143,7 @@
           if (existingLayer) {
             existingLayer.update(nextModel);
           } else {
-            _this3.layers.push(new LayerModel(nextModel));
+            _this2.layers.push(new LayerModel(nextModel));
           }
         });
 
@@ -2211,7 +2196,7 @@
     }, {
       key: 'remove',
       value: function remove(layerIds) {
-        var _this4 = this;
+        var _this3 = this;
 
         var layers = this.layers.slice(0);
         var ids = Array.isArray(layerIds) ? layerIds : [layerIds];
@@ -2219,11 +2204,11 @@
         this.layers.forEach(function (layerModel, index) {
           if (ids) {
             if (ids.includes(layerModel.id)) {
-              _this4.plugin.remove(layerModel);
+              _this3.plugin.remove(layerModel);
               layers.splice(index, 1);
             }
           } else {
-            _this4.plugin.remove(layerModel);
+            _this3.plugin.remove(layerModel);
           }
         });
 
@@ -2239,7 +2224,7 @@
     }, {
       key: 'setOpacity',
       value: function setOpacity(layerIds, opacity) {
-        var _this5 = this;
+        var _this4 = this;
 
         var layerModels = this.layers.filter(function (l) {
           return layerIds.includes(l.id);
@@ -2247,7 +2232,7 @@
 
         if (layerModels.length) {
           layerModels.forEach(function (lm) {
-            _this5.plugin.setOpacity(lm, opacity);
+            _this4.plugin.setOpacity(lm, opacity);
           });
         } else {
           console.error("Can't find the layer");
@@ -2263,7 +2248,7 @@
     }, {
       key: 'setVisibility',
       value: function setVisibility(layerIds, visibility) {
-        var _this6 = this;
+        var _this5 = this;
 
         var layerModels = this.layers.filter(function (l) {
           return layerIds.includes(l.id);
@@ -2271,7 +2256,7 @@
 
         if (layerModels.length) {
           layerModels.forEach(function (lm) {
-            _this6.plugin.setVisibility(lm, visibility);
+            _this5.plugin.setVisibility(lm, visibility);
           });
         } else {
           console.error("Can't find the layer");
@@ -2287,7 +2272,7 @@
     }, {
       key: 'setZIndex',
       value: function setZIndex(layerIds, zIndex) {
-        var _this7 = this;
+        var _this6 = this;
 
         var layerModels = this.layers.filter(function (l) {
           return layerIds.includes(l.id);
@@ -2295,7 +2280,7 @@
 
         if (layerModels.length) {
           layerModels.forEach(function (lm) {
-            _this7.plugin.setZIndex(lm, zIndex);
+            _this6.plugin.setZIndex(lm, zIndex);
           });
         } else {
           console.error("Can't find the layer");
@@ -2319,9 +2304,23 @@
         }
       }
     }, {
+      key: 'fitMapToLayer',
+      value: function fitMapToLayer(layerId) {
+        if (typeof this.plugin.fitMapToLayer !== 'function') {
+          console.error('This plugin does not support fitting map bounds to layer yet.');
+          return;
+        }
+
+        var layerModel = this.layers.find(function (l) {
+          return l.id === layerId;
+        });
+
+        if (layerModel) this.plugin.fitMapToLayer(layerModel);
+      }
+    }, {
       key: 'requestLayer',
       value: function requestLayer(layerModel) {
-        var _this8 = this;
+        var _this7 = this;
 
         var provider = layerModel.provider;
 
@@ -2342,12 +2341,12 @@
         this.promises[layerModel.id] = method.call(this, layerModel).then(function (layer) {
           layerModel.set('mapLayer', layer);
 
-          _this8.plugin.add(layerModel);
-          _this8.plugin.setZIndex(layerModel, layerModel.zIndex);
-          _this8.plugin.setOpacity(layerModel, layerModel.opacity);
-          _this8.plugin.setVisibility(layerModel, layerModel.visibility);
+          _this7.plugin.add(layerModel);
+          _this7.plugin.setZIndex(layerModel, layerModel.zIndex);
+          _this7.plugin.setOpacity(layerModel, layerModel.opacity);
+          _this7.plugin.setVisibility(layerModel, layerModel.visibility);
 
-          _this8.setEvents(layerModel);
+          _this7.setEvents(layerModel);
         });
 
         return this;

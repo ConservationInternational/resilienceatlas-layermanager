@@ -245,7 +245,7 @@ class LayerManager {
     }
   }
 
-  fitMapToLayer = (layerId) => {
+  fitMapToLayer(layerId) {
     if (typeof this.plugin.fitMapToLayer !== 'function') {
       console.error('This plugin does not support fitting map bounds to layer yet.');
       return;
