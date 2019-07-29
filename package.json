@@ -1,10 +1,11 @@
 {
-  "name": "layer-manager",
-  "version": "1.0.1-resilience",
+  "name": "resilience-layer-manager",
+  "private": true,
+  "version": "1.0.2",
   "description": "A library to get a layer depending on provider and layer spec",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Vizzuality/layer-manager.git"
+    "url": "https://github.com/ConservationInternational/resilienceatlas-layermanager"
   },
   "author": "Vizzuality",
   "license": "MIT",
