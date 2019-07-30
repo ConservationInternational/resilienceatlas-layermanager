@@ -250,21 +250,21 @@
         var layer = L.tileLayer(tileUrl);
 
         // Add interactivity
-        // if (interactivity && interactivity.length) {
-        //   const gridUrl = `https://${layerConfigParsed.account}-cdn.resilienceatlas.org/user/ra/api/v1/map/${response.layergroupid}/0/{z}/{x}/{y}.grid.json`;
-        //   const interactiveLayer = L.utfGrid(gridUrl);
+        if (interactivity && interactivity.length) {
+          var gridUrl = 'https://' + layerConfigParsed.account + '-cdn.resilienceatlas.org/user/ra/api/v1/map/' + response.layergroupid + '/0/{z}/{x}/{y}.grid.json';
+          var interactiveLayer = L.utfGrid(gridUrl);
 
-        //   const LayerGroup = L.LayerGroup.extend({
-        //     group: true,
-        //     setOpacity: (opacity) => {
-        //       layerModel.mapLayer.getLayers().forEach((l) => {
-        //         l.setOpacity(opacity);
-        //       });
-        //     }
-        //   });
+          var LayerGroup = L.LayerGroup.extend({
+            group: true,
+            setOpacity: function setOpacity(opacity) {
+              layerModel.mapLayer.getLayers().forEach(function (l) {
+                l.setOpacity(opacity);
+              });
+            }
+          });
 
-        //   return resolve(new LayerGroup([layer, interactiveLayer]));
-        // }
+          return resolve(new LayerGroup([layer, interactiveLayer]));
+        }
 
         return resolve(layer);
       }).catch(function (err) {
@@ -1814,173 +1814,6 @@
     return PluginLeaflet;
   }();
 
-  var cartoLayer = (function (Cesium) {
-    return function (layerModel) {
-      return fetchTile(layerModel).then(function (response) {
-        var layerConfig = layerModel.layerConfig;
-
-        var url = response.cdn_url.templates.https.url + '/' + layerConfig.account + '/api/v1/map/' + response.layergroupid + '/{z}/{x}/{y}.png';
-        var provider = new Cesium.UrlTemplateImageryProvider({ url: url });
-        provider.errorEvent.addEventListener(function () {
-          return false;
-        });
-        // don't show warnings
-        return new Cesium.ImageryLayer(provider);
-      });
-    };
-  });
-
-  var tileLayer = (function (Cesium) {
-    return function (layerModel) {
-      return new Promise(function (resolve) {
-        var _layerModel$layerConf = layerModel.layerConfig,
-            layerConfig = _layerModel$layerConf === undefined ? {} : _layerModel$layerConf;
-        var url = layerConfig.body.url;
-
-        var provider = new Cesium.UrlTemplateImageryProvider({ url: url });
-        provider.errorEvent.addEventListener(function () {
-          return false;
-        });
-        // don't show warnings
-        resolve(new Cesium.ImageryLayer(provider));
-      });
-    };
-  });
-
-  var PluginCesium = function () {
-    function PluginCesium(map) {
-      classCallCheck(this, PluginCesium);
-
-      _initialiseProps.call(this);
-
-      var Cesium = PluginCesium.Cesium;
-
-      this.map = map;
-      this.eventListener = new Cesium.ScreenSpaceEventHandler(map.scene.canvas);
-
-      this.method = {
-        carto: cartoLayer(Cesium),
-        cartodb: cartoLayer(Cesium),
-        cesium: tileLayer(Cesium)
-      };
-    }
-
-    createClass(PluginCesium, [{
-      key: 'add',
-      value: function add(layerModel) {
-        var mapLayer = layerModel.mapLayer;
-
-        this.map.imageryLayers.add(mapLayer);
-      }
-    }, {
-      key: 'remove',
-      value: function remove(layerModel) {
-        var mapLayer = layerModel.mapLayer;
-
-        this.map.imageryLayers.remove(mapLayer, true);
-        this.eventListener.destroy();
-      }
-    }, {
-      key: 'getLayerByProvider',
-      value: function getLayerByProvider(provider) {
-        return this.method[provider];
-      }
-    }, {
-      key: 'setZIndex',
-      value: function setZIndex(layerModel, zIndex) {
-        var length = this.map.imageryLayers.length;
-        var mapLayer = layerModel.mapLayer;
-
-        var layerIndex = zIndex >= length ? length - 1 : zIndex;
-        var nextIndex = zIndex < 0 ? 0 : layerIndex;
-        var currentIndex = this.map.imageryLayers.indexOf(mapLayer);
-        if (currentIndex !== nextIndex) {
-          var steps = nextIndex - currentIndex;
-          for (var i = 0; i < Math.abs(steps); i++) {
-            if (steps > 0) {
-              this.map.imageryLayers.raise(mapLayer);
-            } else {
-              this.map.imageryLayers.lower(mapLayer);
-            }
-          }
-        }
-        return this;
-      }
-    }, {
-      key: 'setOpacity',
-      value: function setOpacity(layerModel, opacity) {
-        var mapLayer = layerModel.mapLayer;
-
-        mapLayer.alpha = opacity;
-        return this;
-      }
-    }, {
-      key: 'setVisibility',
-      value: function setVisibility(layerModel, visibility) {
-        var mapLayer = layerModel.mapLayer;
-
-        mapLayer.show = visibility;
-        return this;
-      }
-    }, {
-      key: 'setEvents',
-      value: function setEvents(layerModel) {
-        var _this = this;
-
-        var events = layerModel.events;
-
-        Object.keys(events).forEach(function (type) {
-          var action = events[type];
-          if (_this.eventListener.getInputAction(type)) {
-            _this.eventListener.removeInputAction(type);
-          }
-          _this.eventListener.setInputAction(_this.getCoordinatesFromEvent(action), type);
-        });
-        return this;
-      }
-    }, {
-      key: 'setParams',
-      value: function setParams(layerModel) {
-        this.remove(layerModel);
-      }
-    }, {
-      key: 'setLayerConfig',
-      value: function setLayerConfig(layerModel) {
-        this.remove(layerModel);
-      }
-    }, {
-      key: 'setDecodeParams',
-      value: function setDecodeParams(layerModel) {
-        console.info('Decode params callback', layerModel, this);
-      }
-    }]);
-    return PluginCesium;
-  }();
-
-  PluginCesium.Cesium = typeof window !== 'undefined' ? window.Cesium : null;
-
-  var _initialiseProps = function _initialiseProps() {
-    var _this2 = this;
-
-    this.getCoordinatesFromEvent = function (action) {
-      return function (event) {
-        var position = event.position;
-        var Cesium = PluginCesium.Cesium;
-
-        var clicked = new Cesium.Cartesian2(position.x, position.y);
-        var ellipsoid = _this2.map.scene.globe.ellipsoid;
-
-        var cartesian = _this2.map.camera.pickEllipsoid(clicked, ellipsoid);
-        if (cartesian) {
-          var cartographic = ellipsoid.cartesianToCartographic(cartesian);
-          var lat = Cesium.Math.toDegrees(cartographic.latitude);
-          var lng = Cesium.Math.toDegrees(cartographic.longitude);
-          action(event, { lat: lat, lng: lng });
-        }
-      };
-    };
-  };
-
   var LayerModel = function () {
     function LayerModel() {
       var layerSpec = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -2383,7 +2216,6 @@
   // This file exists as an entry point for bundling our umd builds.
 
   LayerManager.PluginLeaflet = PluginLeaflet;
-  LayerManager.PluginCesium = PluginCesium;
   LayerManager.replace = replace;
   LayerManager.substitution = substitution;
   LayerManager.concatenation = concatenation;

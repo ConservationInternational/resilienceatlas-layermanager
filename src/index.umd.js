@@ -4,12 +4,10 @@
 // This file does away with named imports in favor of a single export default.
 
 import PluginLeaflet from './plugins/plugin-leaflet';
-import PluginCesium from './plugins/plugin-cesium';
 import { replace, substitution, concatenation } from './utils/query';
 import LayerManager from './layer-manager';
 
 LayerManager.PluginLeaflet = PluginLeaflet;
-LayerManager.PluginCesium = PluginCesium;
 LayerManager.replace = replace;
 LayerManager.substitution = substitution;
 LayerManager.concatenation = concatenation;

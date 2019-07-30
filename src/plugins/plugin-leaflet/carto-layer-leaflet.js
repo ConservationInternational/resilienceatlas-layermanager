@@ -18,21 +18,21 @@ const CartoLayer = (layerModel) => {
         const layer = L.tileLayer(tileUrl);
 
         // Add interactivity
-        // if (interactivity && interactivity.length) {
-        //   const gridUrl = `https://${layerConfigParsed.account}-cdn.resilienceatlas.org/user/ra/api/v1/map/${response.layergroupid}/0/{z}/{x}/{y}.grid.json`;
-        //   const interactiveLayer = L.utfGrid(gridUrl);
+        if (interactivity && interactivity.length) {
+          const gridUrl = `https://${layerConfigParsed.account}-cdn.resilienceatlas.org/user/ra/api/v1/map/${response.layergroupid}/0/{z}/{x}/{y}.grid.json`;
+          const interactiveLayer = L.utfGrid(gridUrl);
 
-        //   const LayerGroup = L.LayerGroup.extend({
-        //     group: true,
-        //     setOpacity: (opacity) => {
-        //       layerModel.mapLayer.getLayers().forEach((l) => {
-        //         l.setOpacity(opacity);
-        //       });
-        //     }
-        //   });
+          const LayerGroup = L.LayerGroup.extend({
+            group: true,
+            setOpacity: (opacity) => {
+              layerModel.mapLayer.getLayers().forEach((l) => {
+                l.setOpacity(opacity);
+              });
+            }
+          });
 
-        //   return resolve(new LayerGroup([layer, interactiveLayer]));
-        // }
+          return resolve(new LayerGroup([layer, interactiveLayer]));
+        }
 
         return resolve(layer);
       })
