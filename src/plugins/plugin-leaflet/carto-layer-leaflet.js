@@ -19,7 +19,7 @@ const CartoLayer = (layerModel) => {
 
         // Add interactivity
         if (interactivity && interactivity.length) {
-          const gridUrl = `https://${layerConfigParsed.account}-cdn.resilienceatlas.org/user/ra/api/v1/map/${response.layergroupid}/0/{z}/{x}/{y}.grid.json`;
+          const gridUrl = `https://${response.cdn_url.https}/ra/api/v1/map/${response.layergroupid}/0/{z}/{x}/{y}.grid.json`;
           const interactiveLayer = L.utfGrid(gridUrl);
 
           const LayerGroup = L.LayerGroup.extend({
