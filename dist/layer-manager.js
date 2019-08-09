@@ -251,7 +251,7 @@
 
         // Add interactivity
         if (interactivity && interactivity.length) {
-          var gridUrl = 'https://' + layerConfigParsed.account + '-cdn.resilienceatlas.org/user/ra/api/v1/map/' + response.layergroupid + '/0/{z}/{x}/{y}.grid.json';
+          var gridUrl = 'https://' + response.cdn_url.https + '/ra/api/v1/map/' + response.layergroupid + '/0/{z}/{x}/{y}.grid.json';
           var interactiveLayer = L.utfGrid(gridUrl);
 
           var LayerGroup = L.LayerGroup.extend({
