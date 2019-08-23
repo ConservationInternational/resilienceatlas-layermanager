@@ -14,7 +14,7 @@ export const fetchTile = (layerModel) => {
     stat_tag: 'API',
     layers: layerConfigParsed.body.layers.map((l) => {
       if (!!interactivity && interactivity.length) {
-        return { ...l, options: { ...l.options, interactivity: interactivity.split(', ') } };
+        return { ...l, options: { ...l.options, interactivity } };
       }
       return l;
     }),

@@ -162,7 +162,7 @@
       stat_tag: 'API',
       layers: layerConfigParsed.body.layers.map(function (l) {
         if (!!interactivity && interactivity.length) {
-          return _extends({}, l, { options: _extends({}, l.options, { interactivity: interactivity.split(', ') }) });
+          return _extends({}, l, { options: _extends({}, l.options, { interactivity: interactivity }) });
         }
         return l;
       })
