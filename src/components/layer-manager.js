@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import Manager from '../layer-manager';
 import Layer from './layer';
 
+import debounce from 'lodash/debounce';
+
 class LayerManager extends PureComponent {
   static propTypes = {
     map: PropTypes.object.isRequired,
@@ -36,8 +38,11 @@ class LayerManager extends PureComponent {
 
   onRenderLayers = () => {
     const { onLayerLoading, onReady } = this.props;
-    if (this.layerManager.layers && this.layerManager.layers.length) {
+    const { layers } = this.layerManager;
+
+    if (layers && layers.length) {
       if (onLayerLoading) onLayerLoading(true);
+
       this.layerManager.renderLayers().then((layers) => {
         if (onReady) onReady(layers);
         if (onLayerLoading) onLayerLoading(false);

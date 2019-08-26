@@ -180,7 +180,13 @@ class PluginLeaflet {
       decodeFunction
     } = layerModel;
 
-    mapLayer.reDraw({ decodeParams, decodeFunction, params, sqlParams });
+    if (mapLayer.group) {
+      mapLayer.eachLayer((l) => {
+        if (l.reDraw) l.reDraw({ decodeParams, decodeFunction, params, sqlParams });
+      });
+    } else {
+      mapLayer.reDraw({ decodeParams, decodeFunction, params, sqlParams });
+    }
 
     return this;
   }

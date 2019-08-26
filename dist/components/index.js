@@ -1,11 +1,12 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('lodash/isEqual'), require('lodash/isEmpty'), require('react'), require('prop-types')) :
-  typeof define === 'function' && define.amd ? define(['lodash/isEqual', 'lodash/isEmpty', 'react', 'prop-types'], factory) :
-  (global.LayerManager = factory(global.isEqual,global.isEmpty,global.React,global.PropTypes));
-}(this, (function (isEqual,isEmpty,React,PropTypes) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('lodash/isEqual'), require('lodash/isEmpty'), require('lodash/debounce'), require('react'), require('prop-types')) :
+  typeof define === 'function' && define.amd ? define(['lodash/isEqual', 'lodash/isEmpty', 'lodash/debounce', 'react', 'prop-types'], factory) :
+  (global.LayerManager = factory(global.isEqual,global.isEmpty,global.debounce,global.React,global.PropTypes));
+}(this, (function (isEqual,isEmpty,debounce,React,PropTypes) { 'use strict';
 
   isEqual = isEqual && isEqual.hasOwnProperty('default') ? isEqual['default'] : isEqual;
   isEmpty = isEmpty && isEmpty.hasOwnProperty('default') ? isEmpty['default'] : isEmpty;
+  debounce = debounce && debounce.hasOwnProperty('default') ? debounce['default'] : debounce;
   var React__default = 'default' in React ? React['default'] : React;
   PropTypes = PropTypes && PropTypes.hasOwnProperty('default') ? PropTypes['default'] : PropTypes;
 
@@ -140,7 +141,15 @@
 
   var LayerManager = function () {
     function LayerManager(map, Plugin) {
+      var _this = this;
+
       classCallCheck(this, LayerManager);
+      this.requestLayerSuccess = debounce(function (layerModel) {
+        _this.plugin.add(layerModel);
+        _this.plugin.setZIndex(layerModel, layerModel.zIndex);
+        _this.plugin.setOpacity(layerModel, layerModel.opacity);
+        _this.plugin.setVisibility(layerModel, layerModel.visibility);
+      }, 50);
 
       this.map = map;
       this.plugin = new Plugin(this.map);
@@ -157,7 +166,7 @@
     createClass(LayerManager, [{
       key: 'renderLayers',
       value: function renderLayers() {
-        var _this = this;
+        var _this2 = this;
 
         if (this.layers.length > 0) {
           this.layers.forEach(function (layerModel) {
@@ -177,17 +186,17 @@
 
               // In case has changed, just update it else if (
               if (layerModel.mapLayer && hasChanged) {
-                return _this.updateLayer(layerModel);
+                return _this2.updateLayer(layerModel);
               }
             }
 
             if (layerModel.mapLayer && shouldUpdate) {
-              _this.updateLayer(layerModel);
+              _this2.updateLayer(layerModel);
             }
 
             // adds a new promise to `this.promises` every time it gets called
-            _this.requestLayer(layerModel);
-            _this.requestLayerBounds(layerModel);
+            _this2.requestLayer(layerModel);
+            _this2.requestLayerBounds(layerModel);
 
             // reset changedAttributes
             return layerModel.set('changedAttributes', {});
@@ -198,9 +207,9 @@
           }
 
           return Promise.all(Object.values(this.promises)).then(function () {
-            return _this.layers;
+            return _this2.layers;
           }).then(function () {
-            _this.promises = {};
+            _this2.promises = {};
           });
         }
 
@@ -217,7 +226,7 @@
     }, {
       key: 'add',
       value: function add(layers) {
-        var _this2 = this;
+        var _this3 = this;
 
         var layerOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
           opacity: 1,
@@ -237,7 +246,7 @@
         }
 
         layers.forEach(function (layer) {
-          var existingLayer = _this2.layers.find(function (l) {
+          var existingLayer = _this3.layers.find(function (l) {
             return l.id === layer.id;
           });
           var nextModel = _extends({}, layer, layerOptions);
@@ -245,7 +254,7 @@
           if (existingLayer) {
             existingLayer.update(nextModel);
           } else {
-            _this2.layers.push(new LayerModel(nextModel));
+            _this3.layers.push(new LayerModel(nextModel));
           }
         });
 
@@ -298,7 +307,7 @@
     }, {
       key: 'remove',
       value: function remove(layerIds) {
-        var _this3 = this;
+        var _this4 = this;
 
         var layers = this.layers.slice(0);
         var ids = Array.isArray(layerIds) ? layerIds : [layerIds];
@@ -306,11 +315,11 @@
         this.layers.forEach(function (layerModel, index) {
           if (ids) {
             if (ids.includes(layerModel.id)) {
-              _this3.plugin.remove(layerModel);
+              _this4.plugin.remove(layerModel);
               layers.splice(index, 1);
             }
           } else {
-            _this3.plugin.remove(layerModel);
+            _this4.plugin.remove(layerModel);
           }
         });
 
@@ -326,7 +335,7 @@
     }, {
       key: 'setOpacity',
       value: function setOpacity(layerIds, opacity) {
-        var _this4 = this;
+        var _this5 = this;
 
         var layerModels = this.layers.filter(function (l) {
           return layerIds.includes(l.id);
@@ -334,7 +343,7 @@
 
         if (layerModels.length) {
           layerModels.forEach(function (lm) {
-            _this4.plugin.setOpacity(lm, opacity);
+            _this5.plugin.setOpacity(lm, opacity);
           });
         } else {
           console.error("Can't find the layer");
@@ -350,7 +359,7 @@
     }, {
       key: 'setVisibility',
       value: function setVisibility(layerIds, visibility) {
-        var _this5 = this;
+        var _this6 = this;
 
         var layerModels = this.layers.filter(function (l) {
           return layerIds.includes(l.id);
@@ -358,7 +367,7 @@
 
         if (layerModels.length) {
           layerModels.forEach(function (lm) {
-            _this5.plugin.setVisibility(lm, visibility);
+            _this6.plugin.setVisibility(lm, visibility);
           });
         } else {
           console.error("Can't find the layer");
@@ -374,7 +383,7 @@
     }, {
       key: 'setZIndex',
       value: function setZIndex(layerIds, zIndex) {
-        var _this6 = this;
+        var _this7 = this;
 
         var layerModels = this.layers.filter(function (l) {
           return layerIds.includes(l.id);
@@ -382,7 +391,7 @@
 
         if (layerModels.length) {
           layerModels.forEach(function (lm) {
-            _this6.plugin.setZIndex(lm, zIndex);
+            _this7.plugin.setZIndex(lm, zIndex);
           });
         } else {
           console.error("Can't find the layer");
@@ -422,7 +431,7 @@
     }, {
       key: 'requestLayer',
       value: function requestLayer(layerModel) {
-        var _this7 = this;
+        var _this8 = this;
 
         var provider = layerModel.provider;
 
@@ -441,14 +450,13 @@
         // every render method returns a promise that we store in the array
         // to control when all layers are fetched.
         this.promises[layerModel.id] = method.call(this, layerModel).then(function (layer) {
-          layerModel.set('mapLayer', layer);
+          var mapLayer = layer;
 
-          _this7.plugin.add(layerModel);
-          _this7.plugin.setZIndex(layerModel, layerModel.zIndex);
-          _this7.plugin.setOpacity(layerModel, layerModel.opacity);
-          _this7.plugin.setVisibility(layerModel, layerModel.visibility);
+          layerModel.set('mapLayer', mapLayer);
 
-          _this7.setEvents(layerModel);
+          _this8.requestLayerSuccess(layerModel);
+
+          _this8.setEvents(layerModel);
         });
 
         return this;
@@ -545,9 +553,12 @@
         var _this$props = _this.props,
             onLayerLoading = _this$props.onLayerLoading,
             onReady = _this$props.onReady;
+        var layers = _this.layerManager.layers;
 
-        if (_this.layerManager.layers && _this.layerManager.layers.length) {
+
+        if (layers && layers.length) {
           if (onLayerLoading) onLayerLoading(true);
+
           _this.layerManager.renderLayers().then(function (layers) {
             if (onReady) onReady(layers);
             if (onLayerLoading) onLayerLoading(false);
