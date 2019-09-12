@@ -1,7 +1,7 @@
 {
   "name": "resilience-layer-manager",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A library to get a layer depending on provider and layer spec",
   "repository": {
     "type": "git",
