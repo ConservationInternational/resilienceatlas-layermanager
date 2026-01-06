@@ -321,11 +321,13 @@ class LayerManager {
     // every render method returns a promise that we store in the array
     // to control when all layers are fetched.
     this.promises[layerModel.id] = method.call(this, layerModel).then(layer => {
+      console.log('[LayerManager] Layer promise resolved:', layerModel.id, layer);
       const mapLayer = layer;
       layerModel.set('mapLayer', mapLayer);
 
       // Clear pending flag
       delete this.pendingRequests[layerModel.id];
+      console.log('[LayerManager] Calling requestLayerSuccess for:', layerModel.id);
       this.requestLayerSuccess(layerModel);
       this.setEvents(layerModel);
     }).catch(error => {
@@ -336,10 +338,13 @@ class LayerManager {
     return this;
   }
   requestLayerSuccess(layerModel) {
+    console.log('[LayerManager] requestLayerSuccess - adding to map:', layerModel.id, layerModel.mapLayer);
     this.plugin.add(layerModel);
+    console.log('[LayerManager] Layer added to map, setting properties');
     this.plugin.setZIndex(layerModel, layerModel.zIndex);
     this.plugin.setOpacity(layerModel, layerModel.opacity);
     this.plugin.setVisibility(layerModel, layerModel.visibility);
+    console.log('[LayerManager] Layer setup complete:', layerModel.id);
   }
   requestLayerBounds(layerModel) {
     const {
