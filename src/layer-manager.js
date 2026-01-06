@@ -41,20 +41,12 @@ class LayerManager {
    * Render layers
    */
   renderLayers() {
-    console.log('[LayerManager] renderLayers called, layers count:', this.layers.length);
     if (this.layers.length > 0) {
       this.layers.forEach((layerModel) => {
         const { changedAttributes } = layerModel;
         const { sqlParams, params, layerConfig } = changedAttributes;
         const hasChanged = Object.keys(changedAttributes).length > 0;
         const shouldUpdate = sqlParams || params || layerConfig;
-
-        console.log('[LayerManager] Processing layer:', layerModel.id, {
-          hasMapLayer: !!layerModel.mapLayer,
-          hasChanged,
-          shouldUpdate,
-          isPending: !!this.pendingRequests[layerModel.id]
-        });
 
         // If layer already exists on map and nothing changed, skip entirely
         if (layerModel.mapLayer && !hasChanged) {
@@ -75,7 +67,6 @@ class LayerManager {
 
         // Only request new layer if it doesn't exist on map yet and no request is pending
         if (!layerModel.mapLayer && !this.pendingRequests[layerModel.id]) {
-          console.log('[LayerManager] Requesting new layer:', layerModel.id);
           this.requestLayer(layerModel);
           this.requestLayerBounds(layerModel);
         }
@@ -85,19 +76,14 @@ class LayerManager {
       });
 
 
-      console.log('[LayerManager] Promises count:', Object.keys(this.promises).length);
       if (Object.keys(this.promises).length === 0) {
-        console.log('[LayerManager] No promises, resolving immediately');
         return Promise.resolve(this.layers);
       }
 
 
       return Promise
         .all(Object.values(this.promises))
-        .then(() => {
-          console.log('[LayerManager] All promises resolved');
-          return this.layers;
-        })
+        .then(() => this.layers)
         .then(() => { this.promises = {}; });
     }
 
@@ -290,7 +276,6 @@ class LayerManager {
     // every render method returns a promise that we store in the array
     // to control when all layers are fetched.
     this.promises[layerModel.id] = method.call(this, layerModel).then(((layer) => {
-      console.log('[LayerManager] Layer promise resolved:', layerModel.id, layer);
       const mapLayer = layer;
 
       layerModel.set('mapLayer', mapLayer);
@@ -298,7 +283,6 @@ class LayerManager {
       // Clear pending flag
       delete this.pendingRequests[layerModel.id];
 
-      console.log('[LayerManager] Calling requestLayerSuccess for:', layerModel.id);
       this.requestLayerSuccess(layerModel);
 
       this.setEvents(layerModel);
@@ -312,18 +296,10 @@ class LayerManager {
   }
 
   requestLayerSuccess(layerModel) {
-    console.log('[LayerManager] requestLayerSuccess - adding to map:', layerModel.id, layerModel.mapLayer);
-    console.log('[LayerManager] Layer properties:', {
-      zIndex: layerModel.zIndex,
-      opacity: layerModel.opacity,
-      visibility: layerModel.visibility
-    });
     this.plugin.add(layerModel);
-    console.log('[LayerManager] Layer added to map, setting properties');
     this.plugin.setZIndex(layerModel, layerModel.zIndex);
     this.plugin.setOpacity(layerModel, layerModel.opacity);
     this.plugin.setVisibility(layerModel, layerModel.visibility);
-    console.log('[LayerManager] Layer setup complete:', layerModel.id);
   }
 
   requestLayerBounds(layerModel) {

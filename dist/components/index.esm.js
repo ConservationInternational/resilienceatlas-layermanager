@@ -130,7 +130,6 @@ let LayerManager$1 = class LayerManager {
    * Render layers
    */
   renderLayers() {
-    console.log('[LayerManager] renderLayers called, layers count:', this.layers.length);
     if (this.layers.length > 0) {
       this.layers.forEach(layerModel => {
         const {
@@ -143,12 +142,6 @@ let LayerManager$1 = class LayerManager {
         } = changedAttributes;
         const hasChanged = Object.keys(changedAttributes).length > 0;
         const shouldUpdate = sqlParams || params || layerConfig;
-        console.log('[LayerManager] Processing layer:', layerModel.id, {
-          hasMapLayer: !!layerModel.mapLayer,
-          hasChanged,
-          shouldUpdate,
-          isPending: !!this.pendingRequests[layerModel.id]
-        });
 
         // If layer already exists on map and nothing changed, skip entirely
         if (layerModel.mapLayer && !hasChanged) {
@@ -169,7 +162,6 @@ let LayerManager$1 = class LayerManager {
 
         // Only request new layer if it doesn't exist on map yet and no request is pending
         if (!layerModel.mapLayer && !this.pendingRequests[layerModel.id]) {
-          console.log('[LayerManager] Requesting new layer:', layerModel.id);
           this.requestLayer(layerModel);
           this.requestLayerBounds(layerModel);
         }
@@ -177,15 +169,10 @@ let LayerManager$1 = class LayerManager {
         // reset changedAttributes
         layerModel.set('changedAttributes', {});
       });
-      console.log('[LayerManager] Promises count:', Object.keys(this.promises).length);
       if (Object.keys(this.promises).length === 0) {
-        console.log('[LayerManager] No promises, resolving immediately');
         return Promise.resolve(this.layers);
       }
-      return Promise.all(Object.values(this.promises)).then(() => {
-        console.log('[LayerManager] All promises resolved');
-        return this.layers;
-      }).then(() => {
+      return Promise.all(Object.values(this.promises)).then(() => this.layers).then(() => {
         this.promises = {};
       });
     }
@@ -363,13 +350,11 @@ let LayerManager$1 = class LayerManager {
     // every render method returns a promise that we store in the array
     // to control when all layers are fetched.
     this.promises[layerModel.id] = method.call(this, layerModel).then(layer => {
-      console.log('[LayerManager] Layer promise resolved:', layerModel.id, layer);
       const mapLayer = layer;
       layerModel.set('mapLayer', mapLayer);
 
       // Clear pending flag
       delete this.pendingRequests[layerModel.id];
-      console.log('[LayerManager] Calling requestLayerSuccess for:', layerModel.id);
       this.requestLayerSuccess(layerModel);
       this.setEvents(layerModel);
     }).catch(error => {
@@ -380,18 +365,10 @@ let LayerManager$1 = class LayerManager {
     return this;
   }
   requestLayerSuccess(layerModel) {
-    console.log('[LayerManager] requestLayerSuccess - adding to map:', layerModel.id, layerModel.mapLayer);
-    console.log('[LayerManager] Layer properties:', {
-      zIndex: layerModel.zIndex,
-      opacity: layerModel.opacity,
-      visibility: layerModel.visibility
-    });
     this.plugin.add(layerModel);
-    console.log('[LayerManager] Layer added to map, setting properties');
     this.plugin.setZIndex(layerModel, layerModel.zIndex);
     this.plugin.setOpacity(layerModel, layerModel.opacity);
     this.plugin.setVisibility(layerModel, layerModel.visibility);
-    console.log('[LayerManager] Layer setup complete:', layerModel.id);
   }
   requestLayerBounds(layerModel) {
     const {
@@ -468,22 +445,21 @@ class LayerManager extends PureComponent {
       const {
         layers
       } = this.layerManager;
-      console.log('[LayerManager React] onRenderLayers called, layers:', layers.length);
       if (layers && layers.length) {
-        if (onLayerLoading) {
-          console.log('[LayerManager React] Calling onLayerLoading(true)');
+        // Check if any layer actually needs loading (no mapLayer yet and not pending)
+        const needsLoading = layers.some(l => !l.mapLayer && !this.layerManager.pendingRequests[l.id]);
+        if (needsLoading && onLayerLoading) {
           onLayerLoading(true);
         }
         this.layerManager.renderLayers().then(layers => {
-          console.log('[LayerManager React] renderLayers promise resolved');
           if (onReady) onReady(layers);
-          if (onLayerLoading) {
-            console.log('[LayerManager React] Calling onLayerLoading(false)');
+          // Only call onLayerLoading(false) if we actually started loading
+          if (needsLoading && onLayerLoading) {
             onLayerLoading(false);
           }
         }).catch(error => {
           console.error('[LayerManager React] renderLayers error:', error);
-          if (onLayerLoading) onLayerLoading(false);
+          if (needsLoading && onLayerLoading) onLayerLoading(false);
         });
       }
     });
