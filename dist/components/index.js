@@ -118,7 +118,7 @@
     }
   }
   let LayerManager$1 = class LayerManager {
-    constructor(map, Plugin) {
+    constructor(map, Plugin, options = {}) {
       this.map = map;
       this.plugin = new Plugin(this.map);
       checkPluginProperties(this.plugin);
@@ -126,6 +126,7 @@
       this.promises = {};
       this.pendingRequests = {}; // Track layers with in-flight requests
       this.failedLayers = {}; // Track layers that failed to load (to prevent infinite retries)
+      this.onLayerError = options.onLayerError || null; // Callback for layer errors
     }
 
     /**
@@ -369,6 +370,16 @@
         };
         layerModel.set('loadError', error);
         console.error(`Error loading layer ${layerModel.id}:`, error);
+
+        // Call error callback if provided
+        if (this.onLayerError) {
+          this.onLayerError({
+            layerId: layerModel.id,
+            layerName: layerModel.name || layerModel.id,
+            error,
+            timestamp: Date.now()
+          });
+        }
       });
       return this;
     }
@@ -479,9 +490,12 @@
       _defineProperty(this, "fitMapToLayer", layerId => this.layerManager.fitMapToLayer(layerId));
       const {
         map,
-        plugin
+        plugin,
+        onLayerError
       } = props;
-      this.layerManager = new LayerManager$1(map, plugin);
+      this.layerManager = new LayerManager$1(map, plugin, {
+        onLayerError
+      });
     }
     componentDidMount() {
       this.onRenderLayers();
@@ -517,12 +531,14 @@
     layersSpec: PropTypes.arrayOf(PropTypes.object),
     children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node]),
     onLayerLoading: PropTypes.func,
+    onLayerError: PropTypes.func,
     onReady: PropTypes.func
   });
   _defineProperty(LayerManager, "defaultProps", {
     children: [],
     layersSpec: [],
     onLayerLoading: null,
+    onLayerError: null,
     onReady: null
   });
 

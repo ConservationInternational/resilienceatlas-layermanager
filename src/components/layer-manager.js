@@ -10,6 +10,7 @@ class LayerManager extends PureComponent {
     layersSpec: PropTypes.arrayOf(PropTypes.object),
     children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node]),
     onLayerLoading: PropTypes.func,
+    onLayerError: PropTypes.func,
     onReady: PropTypes.func
   };
 
@@ -17,13 +18,14 @@ class LayerManager extends PureComponent {
     children: [],
     layersSpec: [],
     onLayerLoading: null,
+    onLayerError: null,
     onReady: null
   };
 
   constructor(props) {
     super(props);
-    const { map, plugin } = props;
-    this.layerManager = new Manager(map, plugin);
+    const { map, plugin, onLayerError } = props;
+    this.layerManager = new Manager(map, plugin, { onLayerError });
   }
 
   componentDidMount() {

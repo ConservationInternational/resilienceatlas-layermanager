@@ -88,7 +88,7 @@ function checkPluginProperties(plugin) {
   }
 }
 class LayerManager {
-  constructor(map, Plugin) {
+  constructor(map, Plugin, options = {}) {
     this.map = map;
     this.plugin = new Plugin(this.map);
     checkPluginProperties(this.plugin);
@@ -96,6 +96,7 @@ class LayerManager {
     this.promises = {};
     this.pendingRequests = {}; // Track layers with in-flight requests
     this.failedLayers = {}; // Track layers that failed to load (to prevent infinite retries)
+    this.onLayerError = options.onLayerError || null; // Callback for layer errors
   }
 
   /**
@@ -339,6 +340,16 @@ class LayerManager {
       };
       layerModel.set('loadError', error);
       console.error(`Error loading layer ${layerModel.id}:`, error);
+
+      // Call error callback if provided
+      if (this.onLayerError) {
+        this.onLayerError({
+          layerId: layerModel.id,
+          layerName: layerModel.name || layerModel.id,
+          error,
+          timestamp: Date.now()
+        });
+      }
     });
     return this;
   }
