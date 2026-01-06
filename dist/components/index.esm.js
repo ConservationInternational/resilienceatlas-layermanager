@@ -176,6 +176,11 @@ let LayerManager$1 = class LayerManager {
       }
       return Promise.all(Object.values(this.promises)).then(() => this.layers).then(() => {
         this.promises = {};
+      }).catch(error => {
+        // Catch any remaining unhandled errors to prevent them from bubbling up
+        console.error('[LayerManager] Error in renderLayers:', error);
+        this.promises = {};
+        return this.layers;
       });
     }
 
@@ -342,7 +347,23 @@ let LayerManager$1 = class LayerManager {
     } = layerModel;
     const method = this.plugin.getLayerByProvider(provider);
     if (!method) {
-      this.promises[layerModel.id] = Promise.reject(new Error(`${provider} provider is not yet supported.`));
+      const error = new Error(`${provider} provider is not yet supported.`);
+      console.error(`Error loading layer ${layerModel.id}:`, error);
+      this.failedLayers[layerModel.id] = {
+        error,
+        timestamp: Date.now()
+      };
+      layerModel.set('loadError', error);
+
+      // Call error callback if provided
+      if (this.onLayerError) {
+        this.onLayerError({
+          layerId: layerModel.id,
+          layerName: layerModel.name || layerModel.id,
+          error,
+          timestamp: Date.now()
+        });
+      }
       return false;
     }
 
