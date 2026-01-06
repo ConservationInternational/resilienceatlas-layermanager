@@ -35,6 +35,7 @@ class LayerManager {
     checkPluginProperties(this.plugin);
     this.layers = [];
     this.promises = {};
+    this.pendingRequests = {}; // Track layers with in-flight requests
   }
 
   /**
@@ -65,8 +66,8 @@ class LayerManager {
           this.updateLayer(layerModel);
         }
 
-        // Only request new layer if it doesn't exist on map yet
-        if (!layerModel.mapLayer) {
+        // Only request new layer if it doesn't exist on map yet and no request is pending
+        if (!layerModel.mapLayer && !this.pendingRequests[layerModel.id]) {
           this.requestLayer(layerModel);
           this.requestLayerBounds(layerModel);
         }
@@ -270,14 +271,8 @@ class LayerManager {
       return false;
     }
 
-    // Cancel previous/existing request
-    if (
-      this.promises[layerModel.id]
-        && this.promises[layerModel.id].isPending
-        && this.promises[layerModel.id].isPending()
-    ) {
-      this.promises[layerModel.id].cancel();
-    }
+    // Mark this layer as having a pending request
+    this.pendingRequests[layerModel.id] = true;
 
     // every render method returns a promise that we store in the array
     // to control when all layers are fetched.
@@ -286,10 +281,17 @@ class LayerManager {
 
       layerModel.set('mapLayer', mapLayer);
 
+      // Clear pending flag
+      delete this.pendingRequests[layerModel.id];
+
       this.requestLayerSuccess(layerModel);
 
       this.setEvents(layerModel);
-    }));
+    })).catch((error) => {
+      // Clear pending flag on error too
+      delete this.pendingRequests[layerModel.id];
+      console.error(`Error loading layer ${layerModel.id}:`, error);
+    });
 
     return this;
   }
@@ -310,19 +312,22 @@ class LayerManager {
     }
 
     const promiseHash = `${layerModel.id}_bounds`;
-    // Cancel previous/existing request
-    if (
-      this.promises[promiseHash]
-        && this.promises[promiseHash].isPending
-        && this.promises[promiseHash].isPending()
-    ) {
-      this.promises[promiseHash].cancel();
+
+    // Skip if already pending
+    if (this.pendingRequests[promiseHash]) {
+      return false;
     }
+
+    this.pendingRequests[promiseHash] = true;
 
     // every render method returns a promise that we store in the array
     // to control when all layers are fetched.
     this.promises[promiseHash] = method.call(this, layerModel).then((bounds) => {
+      delete this.pendingRequests[promiseHash];
       layerModel.set('mapLayerBounds', bounds);
+    }).catch((error) => {
+      delete this.pendingRequests[promiseHash];
+      console.error(`Error loading bounds for layer ${layerModel.id}:`, error);
     });
 
     return this;
