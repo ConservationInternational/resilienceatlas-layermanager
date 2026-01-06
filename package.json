@@ -1,7 +1,7 @@
 {
   "name": "resilience-layer-manager",
   "private": true,
-  "version": "2.0",
+  "version": "2.0.1",
   "description": "A library to get a layer depending on provider and layer spec",
   "repository": {
     "type": "git",
@@ -19,7 +19,17 @@
     "./components": {
       "import": "./dist/components/index.esm.js",
       "require": "./lib/components/index.js"
-    }
+    },
+    "./dist/components": {
+      "import": "./dist/components/index.esm.js",
+      "require": "./lib/components/index.js"
+    },
+    "./dist/layer-manager": {
+      "import": "./dist/layer-manager.esm.js",
+      "require": "./lib/index.js"
+    },
+    "./dist/*": "./dist/*",
+    "./lib/*": "./lib/*"
   },
   "engines": {
     "node": ">=24.0.0"
