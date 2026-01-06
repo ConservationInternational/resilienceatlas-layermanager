@@ -1,150 +1,130 @@
-import isEqual from 'lodash/isEqual';
-import isEmpty from 'lodash/isEmpty';
-import debounce from 'lodash/debounce';
 import React, { PureComponent, Children, cloneElement, Fragment } from 'react';
 import PropTypes from 'prop-types';
+import isEmpty from 'lodash/isEmpty';
+import debounce from 'lodash/debounce';
+import isEqual from 'lodash/isEqual';
 
-var classCallCheck = function (instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-};
-
-var createClass = function () {
-  function defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, descriptor.key, descriptor);
+function _defineProperty(e, r, t) {
+  return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+    value: t,
+    enumerable: true,
+    configurable: true,
+    writable: true
+  }) : e[r] = t, e;
+}
+function _extends() {
+  return _extends = Object.assign ? Object.assign.bind() : function (n) {
+    for (var e = 1; e < arguments.length; e++) {
+      var t = arguments[e];
+      for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]);
     }
+    return n;
+  }, _extends.apply(null, arguments);
+}
+function ownKeys(e, r) {
+  var t = Object.keys(e);
+  if (Object.getOwnPropertySymbols) {
+    var o = Object.getOwnPropertySymbols(e);
+    r && (o = o.filter(function (r) {
+      return Object.getOwnPropertyDescriptor(e, r).enumerable;
+    })), t.push.apply(t, o);
   }
-
-  return function (Constructor, protoProps, staticProps) {
-    if (protoProps) defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) defineProperties(Constructor, staticProps);
-    return Constructor;
-  };
-}();
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
+  return t;
+}
+function _objectSpread2(e) {
+  for (var r = 1; r < arguments.length; r++) {
+    var t = null != arguments[r] ? arguments[r] : {};
+    r % 2 ? ownKeys(Object(t), true).forEach(function (r) {
+      _defineProperty(e, r, t[r]);
+    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) {
+      Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
+    });
   }
-
-  return target;
-};
-
-var inherits = function (subClass, superClass) {
-  if (typeof superClass !== "function" && superClass !== null) {
-    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+  return e;
+}
+function _objectWithoutProperties(e, t) {
+  if (null == e) return {};
+  var o,
+    r,
+    i = _objectWithoutPropertiesLoose(e, t);
+  if (Object.getOwnPropertySymbols) {
+    var n = Object.getOwnPropertySymbols(e);
+    for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]);
   }
-
-  subClass.prototype = Object.create(superClass && superClass.prototype, {
-    constructor: {
-      value: subClass,
-      enumerable: false,
-      writable: true,
-      configurable: true
-    }
-  });
-  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-};
-
-var objectWithoutProperties = function (obj, keys) {
-  var target = {};
-
-  for (var i in obj) {
-    if (keys.indexOf(i) >= 0) continue;
-    if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
-    target[i] = obj[i];
+  return i;
+}
+function _objectWithoutPropertiesLoose(r, e) {
+  if (null == r) return {};
+  var t = {};
+  for (var n in r) if ({}.hasOwnProperty.call(r, n)) {
+    if (-1 !== e.indexOf(n)) continue;
+    t[n] = r[n];
   }
-
-  return target;
-};
-
-var possibleConstructorReturn = function (self, call) {
-  if (!self) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  return t;
+}
+function _toPrimitive(t, r) {
+  if ("object" != typeof t || !t) return t;
+  var e = t[Symbol.toPrimitive];
+  if (void 0 !== e) {
+    var i = e.call(t, r);
+    if ("object" != typeof i) return i;
+    throw new TypeError("@@toPrimitive must return a primitive value.");
   }
+  return ("string" === r ? String : Number)(t);
+}
+function _toPropertyKey(t) {
+  var i = _toPrimitive(t, "string");
+  return "symbol" == typeof i ? i : i + "";
+}
 
-  return call && (typeof call === "object" || typeof call === "function") ? call : self;
-};
-
-var LayerModel = function () {
-  function LayerModel() {
-    var layerSpec = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    classCallCheck(this, LayerModel);
-    this.opacity = 1;
-    this.visibility = true;
-
-    Object.assign(this, layerSpec, { changedAttributes: {} });
+class LayerModel {
+  constructor(layerSpec = {}) {
+    _defineProperty(this, "opacity", 1);
+    _defineProperty(this, "visibility", true);
+    Object.assign(this, layerSpec, {
+      changedAttributes: {}
+    });
   }
+  get(key) {
+    return this[key];
+  }
+  set(key, value) {
+    this[key] = value;
+    return this;
+  }
+  update(layerSpec) {
+    const prevData = _objectSpread2({}, this);
+    const nextData = _objectSpread2({}, layerSpec);
 
-  createClass(LayerModel, [{
-    key: 'get',
-    value: function get$$1(key) {
-      return this[key];
-    }
-  }, {
-    key: 'set',
-    value: function set$$1(key, value) {
-      this[key] = value;
-      return this;
-    }
-  }, {
-    key: 'update',
-    value: function update(layerSpec) {
-      var _this = this;
-
-      var prevData = _extends({}, this);
-      var nextData = _extends({}, layerSpec);
-
-      // reseting changedAttributes for every update
-      this.set('changedAttributes', {});
-
-      Object.keys(nextData).forEach(function (k) {
-        if (!isEqual(prevData[k], nextData[k])) {
-          _this.changedAttributes[k] = nextData[k];
-          _this.set(k, nextData[k]);
-        }
-      });
-    }
-  }]);
-  return LayerModel;
-}();
-
-function checkPluginProperties(plugin) {
-  if (plugin) {
-    var requiredProperties = ['add', 'remove', 'setVisibility', 'setOpacity', 'setEvents', 'setZIndex', 'setLayerConfig', 'setParams', 'setDecodeParams', 'getLayerByProvider'];
-
-    requiredProperties.forEach(function (property) {
-      if (!plugin[property]) {
-        console.error('The ' + property + ' function is required for layer manager plugins');
+    // reseting changedAttributes for every update
+    this.set('changedAttributes', {});
+    Object.keys(nextData).forEach(k => {
+      if (!isEqual(prevData[k], nextData[k])) {
+        this.changedAttributes[k] = nextData[k];
+        this.set(k, nextData[k]);
       }
     });
   }
 }
 
-var LayerManager = function () {
-  function LayerManager(map, Plugin) {
-    var _this = this;
-
-    classCallCheck(this, LayerManager);
-    this.requestLayerSuccess = debounce(function (layerModel) {
-      _this.plugin.add(layerModel);
-      _this.plugin.setZIndex(layerModel, layerModel.zIndex);
-      _this.plugin.setOpacity(layerModel, layerModel.opacity);
-      _this.plugin.setVisibility(layerModel, layerModel.visibility);
-    }, 50);
-
+function checkPluginProperties(plugin) {
+  if (plugin) {
+    const requiredProperties = ['add', 'remove', 'setVisibility', 'setOpacity', 'setEvents', 'setZIndex', 'setLayerConfig', 'setParams', 'setDecodeParams', 'getLayerByProvider'];
+    requiredProperties.forEach(property => {
+      if (!plugin[property]) {
+        console.error(`The ${property} function is required for layer manager plugins`);
+      }
+    });
+  }
+}
+let LayerManager$1 = class LayerManager {
+  constructor(map, Plugin) {
+    _defineProperty(this, "requestLayerSuccess", debounce(layerModel => {
+      this.plugin.add(layerModel);
+      this.plugin.setZIndex(layerModel, layerModel.zIndex);
+      this.plugin.setOpacity(layerModel, layerModel.opacity);
+      this.plugin.setVisibility(layerModel, layerModel.visibility);
+    }, 50));
     this.map = map;
     this.plugin = new Plugin(this.map);
     checkPluginProperties(this.plugin);
@@ -155,485 +135,356 @@ var LayerManager = function () {
   /**
    * Render layers
    */
-
-
-  createClass(LayerManager, [{
-    key: 'renderLayers',
-    value: function renderLayers() {
-      var _this2 = this;
-
-      if (this.layers.length > 0) {
-        this.layers.forEach(function (layerModel) {
-          var changedAttributes = layerModel.changedAttributes;
-          var sqlParams = changedAttributes.sqlParams,
-              params = changedAttributes.params,
-              layerConfig = changedAttributes.layerConfig;
-
-          var hasChanged = Object.keys(changedAttributes).length > 0;
-          var shouldUpdate = sqlParams || params || layerConfig;
-
-          if (!shouldUpdate) {
-            // If layer exists and didn't change don't do anything
-            if (layerModel.mapLayer && !hasChanged) {
-              return false;
-            }
-
-            // In case has changed, just update it else if (
-            if (layerModel.mapLayer && hasChanged) {
-              return _this2.updateLayer(layerModel);
-            }
+  renderLayers() {
+    if (this.layers.length > 0) {
+      this.layers.forEach(layerModel => {
+        const {
+          changedAttributes
+        } = layerModel;
+        const {
+          sqlParams,
+          params,
+          layerConfig
+        } = changedAttributes;
+        const hasChanged = Object.keys(changedAttributes).length > 0;
+        const shouldUpdate = sqlParams || params || layerConfig;
+        if (!shouldUpdate) {
+          // If layer exists and didn't change don't do anything
+          if (layerModel.mapLayer && !hasChanged) {
+            return false;
           }
 
-          if (layerModel.mapLayer && shouldUpdate) {
-            _this2.updateLayer(layerModel);
+          // In case has changed, just update it else if (
+          if (layerModel.mapLayer && hasChanged) {
+            return this.updateLayer(layerModel);
           }
-
-          // adds a new promise to `this.promises` every time it gets called
-          _this2.requestLayer(layerModel);
-          _this2.requestLayerBounds(layerModel);
-
-          // reset changedAttributes
-          return layerModel.set('changedAttributes', {});
-        });
-
-        if (Object.keys(this.promises).length === 0) {
-          return Promise.resolve(this.layers);
+        }
+        if (layerModel.mapLayer && shouldUpdate) {
+          this.updateLayer(layerModel);
         }
 
-        return Promise.all(Object.values(this.promises)).then(function () {
-          return _this2.layers;
-        }).then(function () {
-          _this2.promises = {};
-        });
-      }
+        // adds a new promise to `this.promises` every time it gets called
+        this.requestLayer(layerModel);
+        this.requestLayerBounds(layerModel);
 
-      // By default it will return a empty layers
-      return Promise.resolve(this.layers);
-    }
-
-    /**
-     * Add layers
-     * @param {Array} layers
-     * @param {Object} layerOptions
-     */
-
-  }, {
-    key: 'add',
-    value: function add(layers) {
-      var _this3 = this;
-
-      var layerOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
-        opacity: 1,
-        visibility: true,
-        zIndex: 0,
-        interactivity: null
-      };
-
-      if (typeof layers === 'undefined') {
-        console.error('layers is required');
-        return this;
-      }
-
-      if (!Array.isArray(layers)) {
-        console.error('layers should be an array');
-        return this;
-      }
-
-      layers.forEach(function (layer) {
-        var existingLayer = _this3.layers.find(function (l) {
-          return l.id === layer.id;
-        });
-        var nextModel = _extends({}, layer, layerOptions);
-
-        if (existingLayer) {
-          existingLayer.update(nextModel);
-        } else {
-          _this3.layers.push(new LayerModel(nextModel));
-        }
+        // reset changedAttributes
+        return layerModel.set('changedAttributes', {});
       });
-
-      return this.layers;
-    }
-
-    /**
-     * Updating a specific layer
-     * @param  {Object} layerModel
-     */
-
-  }, {
-    key: 'updateLayer',
-    value: function updateLayer(layerModel) {
-      var _layerModel$changedAt = layerModel.changedAttributes,
-          opacity = _layerModel$changedAt.opacity,
-          visibility = _layerModel$changedAt.visibility,
-          zIndex = _layerModel$changedAt.zIndex,
-          params = _layerModel$changedAt.params,
-          sqlParams = _layerModel$changedAt.sqlParams,
-          decodeParams = _layerModel$changedAt.decodeParams,
-          layerConfig = _layerModel$changedAt.layerConfig,
-          events = _layerModel$changedAt.events;
-
-
-      if (typeof opacity !== 'undefined') {
-        this.plugin.setOpacity(layerModel, opacity);
+      if (Object.keys(this.promises).length === 0) {
+        return Promise.resolve(this.layers);
       }
-      if (typeof visibility !== 'undefined') {
-        this.plugin.setOpacity(layerModel, !visibility ? 0 : layerModel.opacity);
-      }
-      if (typeof zIndex !== 'undefined') {
-        this.plugin.setZIndex(layerModel, zIndex);
-      }
-      if (typeof events !== 'undefined') {
-        this.setEvents(layerModel);
-      }
-
-      if (!isEmpty(layerConfig)) this.plugin.setLayerConfig(layerModel);
-      if (!isEmpty(params)) this.plugin.setParams(layerModel);
-      if (!isEmpty(sqlParams)) this.plugin.setParams(layerModel);
-      if (!isEmpty(decodeParams)) this.plugin.setDecodeParams(layerModel);
-    }
-
-    /**
-     * Remove a layer giving a Layer ID
-     * @param {Array} layerIds
-     */
-
-  }, {
-    key: 'remove',
-    value: function remove(layerIds) {
-      var _this4 = this;
-
-      var layers = this.layers.slice(0);
-      var ids = Array.isArray(layerIds) ? layerIds : [layerIds];
-
-      this.layers.forEach(function (layerModel, index) {
-        if (ids) {
-          if (ids.includes(layerModel.id)) {
-            _this4.plugin.remove(layerModel);
-            layers.splice(index, 1);
-          }
-        } else {
-          _this4.plugin.remove(layerModel);
-        }
+      return Promise.all(Object.values(this.promises)).then(() => this.layers).then(() => {
+        this.promises = {};
       });
-
-      this.layers = ids ? layers : [];
     }
 
-    /**
-     * A namespace to set opacity on selected layer
-     * @param {Array} layerIds
-     * @param {Number} opacity
-     */
-
-  }, {
-    key: 'setOpacity',
-    value: function setOpacity(layerIds, opacity) {
-      var _this5 = this;
-
-      var layerModels = this.layers.filter(function (l) {
-        return layerIds.includes(l.id);
-      });
-
-      if (layerModels.length) {
-        layerModels.forEach(function (lm) {
-          _this5.plugin.setOpacity(lm, opacity);
-        });
-      } else {
-        console.error("Can't find the layer");
-      }
-    }
-
-    /**
-     * A namespace to hide or show a selected layer
-     * @param {Array} layerIds
-     * @param {Boolean} visibility
-     */
-
-  }, {
-    key: 'setVisibility',
-    value: function setVisibility(layerIds, visibility) {
-      var _this6 = this;
-
-      var layerModels = this.layers.filter(function (l) {
-        return layerIds.includes(l.id);
-      });
-
-      if (layerModels.length) {
-        layerModels.forEach(function (lm) {
-          _this6.plugin.setVisibility(lm, visibility);
-        });
-      } else {
-        console.error("Can't find the layer");
-      }
-    }
-
-    /**
-     * A namespace to set z-index on selected layer
-     * @param {Array} layerIds
-     * @param {Number} zIndex
-     */
-
-  }, {
-    key: 'setZIndex',
-    value: function setZIndex(layerIds, zIndex) {
-      var _this7 = this;
-
-      var layerModels = this.layers.filter(function (l) {
-        return layerIds.includes(l.id);
-      });
-
-      if (layerModels.length) {
-        layerModels.forEach(function (lm) {
-          _this7.plugin.setZIndex(lm, zIndex);
-        });
-      } else {
-        console.error("Can't find the layer");
-      }
-    }
-
-    /**
-     * A namespace to set events on selected layer
-     * @param  {Object} layerModel
-     */
-
-  }, {
-    key: 'setEvents',
-    value: function setEvents(layerModel) {
-      var events = layerModel.events;
-
-
-      if (events) {
-        // Let's leave the managment of event to the plugin
-        this.plugin.setEvents(layerModel);
-      }
-    }
-  }, {
-    key: 'fitMapToLayer',
-    value: function fitMapToLayer(layerId) {
-      if (typeof this.plugin.fitMapToLayer !== 'function') {
-        console.error('This plugin does not support fitting map bounds to layer yet.');
-        return;
-      }
-
-      var layerModel = this.layers.find(function (l) {
-        return l.id === layerId;
-      });
-
-      if (layerModel) this.plugin.fitMapToLayer(layerModel);
-    }
-  }, {
-    key: 'requestLayer',
-    value: function requestLayer(layerModel) {
-      var _this8 = this;
-
-      var provider = layerModel.provider;
-
-      var method = this.plugin.getLayerByProvider(provider);
-
-      if (!method) {
-        this.promises[layerModel.id] = Promise.reject(new Error(provider + ' provider is not yet supported.'));
-        return false;
-      }
-
-      // Cancel previous/existing request
-      if (this.promises[layerModel.id] && this.promises[layerModel.id].isPending && this.promises[layerModel.id].isPending()) {
-        this.promises[layerModel.id].cancel();
-      }
-
-      // every render method returns a promise that we store in the array
-      // to control when all layers are fetched.
-      this.promises[layerModel.id] = method.call(this, layerModel).then(function (layer) {
-        var mapLayer = layer;
-
-        layerModel.set('mapLayer', mapLayer);
-
-        _this8.requestLayerSuccess(layerModel);
-
-        _this8.setEvents(layerModel);
-      });
-
-      return this;
-    }
-  }, {
-    key: 'requestLayerBounds',
-    value: function requestLayerBounds(layerModel) {
-      var provider = layerModel.provider;
-
-      var method = this.plugin.getLayerBoundsByProvider(provider);
-
-      if (!method) {
-        return false;
-      }
-
-      var promiseHash = layerModel.id + '_bounds';
-      // Cancel previous/existing request
-      if (this.promises[promiseHash] && this.promises[promiseHash].isPending && this.promises[promiseHash].isPending()) {
-        this.promises[promiseHash].cancel();
-      }
-
-      // every render method returns a promise that we store in the array
-      // to control when all layers are fetched.
-      this.promises[promiseHash] = method.call(this, layerModel).then(function (bounds) {
-        layerModel.set('mapLayerBounds', bounds);
-      });
-
-      return this;
-    }
-  }]);
-  return LayerManager;
-}();
-
-var Layer = function (_PureComponent) {
-  inherits(Layer, _PureComponent);
-
-  function Layer() {
-    classCallCheck(this, Layer);
-    return possibleConstructorReturn(this, (Layer.__proto__ || Object.getPrototypeOf(Layer)).apply(this, arguments));
+    // By default it will return a empty layers
+    return Promise.resolve(this.layers);
   }
 
-  createClass(Layer, [{
-    key: 'componentDidMount',
-    value: function componentDidMount() {
-      this.addSpecToLayerManager();
+  /**
+   * Add layers
+   * @param {Array} layers
+   * @param {Object} layerOptions
+   */
+  add(layers, layerOptions = {
+    opacity: 1,
+    visibility: true,
+    zIndex: 0,
+    interactivity: null
+  }) {
+    if (typeof layers === 'undefined') {
+      console.error('layers is required');
+      return this;
     }
-  }, {
-    key: 'componentDidUpdate',
-    value: function componentDidUpdate() {
-      this.addSpecToLayerManager();
+    if (!Array.isArray(layers)) {
+      console.error('layers should be an array');
+      return this;
     }
-  }, {
-    key: 'componentWillUnmount',
-    value: function componentWillUnmount() {
-      var _props = this.props,
-          layerManager = _props.layerManager,
-          id = _props.id;
+    layers.forEach(layer => {
+      const existingLayer = this.layers.find(l => l.id === layer.id);
+      const nextModel = _objectSpread2(_objectSpread2({}, layer), layerOptions);
+      if (existingLayer) {
+        existingLayer.update(nextModel);
+      } else {
+        this.layers.push(new LayerModel(nextModel));
+      }
+    });
+    return this.layers;
+  }
 
-      layerManager.remove(id);
+  /**
+   * Updating a specific layer
+   * @param  {Object} layerModel
+   */
+  updateLayer(layerModel) {
+    const {
+      opacity,
+      visibility,
+      zIndex,
+      params,
+      sqlParams,
+      decodeParams,
+      layerConfig,
+      events
+    } = layerModel.changedAttributes;
+    if (typeof opacity !== 'undefined') {
+      this.plugin.setOpacity(layerModel, opacity);
     }
-  }, {
-    key: 'addSpecToLayerManager',
-    value: function addSpecToLayerManager() {
-      var _props2 = this.props,
-          layerManager = _props2.layerManager,
-          layerSpec = objectWithoutProperties(_props2, ['layerManager']);
+    if (typeof visibility !== 'undefined') {
+      this.plugin.setOpacity(layerModel, !visibility ? 0 : layerModel.opacity);
+    }
+    if (typeof zIndex !== 'undefined') {
+      this.plugin.setZIndex(layerModel, zIndex);
+    }
+    if (typeof events !== 'undefined') {
+      this.setEvents(layerModel);
+    }
+    if (!isEmpty(layerConfig)) this.plugin.setLayerConfig(layerModel);
+    if (!isEmpty(params)) this.plugin.setParams(layerModel);
+    if (!isEmpty(sqlParams)) this.plugin.setParams(layerModel);
+    if (!isEmpty(decodeParams)) this.plugin.setDecodeParams(layerModel);
+  }
 
-      layerManager.add([layerSpec], {});
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      return null;
-    }
-  }]);
-  return Layer;
-}(PureComponent);
+  /**
+   * Remove a layer giving a Layer ID
+   * @param {Array} layerIds
+   */
+  remove(layerIds) {
+    const layers = this.layers.slice(0);
+    const ids = Array.isArray(layerIds) ? layerIds : [layerIds];
+    this.layers.forEach((layerModel, index) => {
+      if (ids) {
+        if (ids.includes(layerModel.id)) {
+          this.plugin.remove(layerModel);
+          layers.splice(index, 1);
+        }
+      } else {
+        this.plugin.remove(layerModel);
+      }
+    });
+    this.layers = ids ? layers : [];
+  }
 
-Layer.propTypes = {
-  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  layerManager: PropTypes.instanceOf(LayerManager)
+  /**
+   * A namespace to set opacity on selected layer
+   * @param {Array} layerIds
+   * @param {Number} opacity
+   */
+  setOpacity(layerIds, opacity) {
+    const layerModels = this.layers.filter(l => layerIds.includes(l.id));
+    if (layerModels.length) {
+      layerModels.forEach(lm => {
+        this.plugin.setOpacity(lm, opacity);
+      });
+    } else {
+      console.error("Can't find the layer");
+    }
+  }
+
+  /**
+   * A namespace to hide or show a selected layer
+   * @param {Array} layerIds
+   * @param {Boolean} visibility
+   */
+  setVisibility(layerIds, visibility) {
+    const layerModels = this.layers.filter(l => layerIds.includes(l.id));
+    if (layerModels.length) {
+      layerModels.forEach(lm => {
+        this.plugin.setVisibility(lm, visibility);
+      });
+    } else {
+      console.error("Can't find the layer");
+    }
+  }
+
+  /**
+   * A namespace to set z-index on selected layer
+   * @param {Array} layerIds
+   * @param {Number} zIndex
+   */
+  setZIndex(layerIds, zIndex) {
+    const layerModels = this.layers.filter(l => layerIds.includes(l.id));
+    if (layerModels.length) {
+      layerModels.forEach(lm => {
+        this.plugin.setZIndex(lm, zIndex);
+      });
+    } else {
+      console.error("Can't find the layer");
+    }
+  }
+
+  /**
+   * A namespace to set events on selected layer
+   * @param  {Object} layerModel
+   */
+  setEvents(layerModel) {
+    const {
+      events
+    } = layerModel;
+    if (events) {
+      // Let's leave the managment of event to the plugin
+      this.plugin.setEvents(layerModel);
+    }
+  }
+  fitMapToLayer(layerId) {
+    if (typeof this.plugin.fitMapToLayer !== 'function') {
+      console.error('This plugin does not support fitting map bounds to layer yet.');
+      return;
+    }
+    const layerModel = this.layers.find(l => l.id === layerId);
+    if (layerModel) this.plugin.fitMapToLayer(layerModel);
+  }
+  requestLayer(layerModel) {
+    const {
+      provider
+    } = layerModel;
+    const method = this.plugin.getLayerByProvider(provider);
+    if (!method) {
+      this.promises[layerModel.id] = Promise.reject(new Error(`${provider} provider is not yet supported.`));
+      return false;
+    }
+
+    // Cancel previous/existing request
+    if (this.promises[layerModel.id] && this.promises[layerModel.id].isPending && this.promises[layerModel.id].isPending()) {
+      this.promises[layerModel.id].cancel();
+    }
+
+    // every render method returns a promise that we store in the array
+    // to control when all layers are fetched.
+    this.promises[layerModel.id] = method.call(this, layerModel).then(layer => {
+      const mapLayer = layer;
+      layerModel.set('mapLayer', mapLayer);
+      this.requestLayerSuccess(layerModel);
+      this.setEvents(layerModel);
+    });
+    return this;
+  }
+  requestLayerBounds(layerModel) {
+    const {
+      provider
+    } = layerModel;
+    const method = this.plugin.getLayerBoundsByProvider(provider);
+    if (!method) {
+      return false;
+    }
+    const promiseHash = `${layerModel.id}_bounds`;
+    // Cancel previous/existing request
+    if (this.promises[promiseHash] && this.promises[promiseHash].isPending && this.promises[promiseHash].isPending()) {
+      this.promises[promiseHash].cancel();
+    }
+
+    // every render method returns a promise that we store in the array
+    // to control when all layers are fetched.
+    this.promises[promiseHash] = method.call(this, layerModel).then(bounds => {
+      layerModel.set('mapLayerBounds', bounds);
+    });
+    return this;
+  }
 };
-Layer.defaultProps = { layerManager: null };
 
-var LayerManager$1 = function (_PureComponent) {
-  inherits(LayerManager$$1, _PureComponent);
+const _excluded = ["layerManager"];
+class Layer extends PureComponent {
+  componentDidMount() {
+    this.addSpecToLayerManager();
+  }
+  componentDidUpdate() {
+    this.addSpecToLayerManager();
+  }
+  componentWillUnmount() {
+    const {
+      layerManager,
+      id
+    } = this.props;
+    layerManager.remove(id);
+  }
+  addSpecToLayerManager() {
+    const _this$props = this.props,
+      {
+        layerManager
+      } = _this$props,
+      layerSpec = _objectWithoutProperties(_this$props, _excluded);
+    layerManager.add([layerSpec], {});
+  }
+  render() {
+    return null;
+  }
+}
+_defineProperty(Layer, "propTypes", {
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  layerManager: PropTypes.instanceOf(LayerManager$1)
+});
+_defineProperty(Layer, "defaultProps", {
+  layerManager: null
+});
 
-  function LayerManager$$1(props) {
-    classCallCheck(this, LayerManager$$1);
-
-    var _this = possibleConstructorReturn(this, (LayerManager$$1.__proto__ || Object.getPrototypeOf(LayerManager$$1)).call(this, props));
-
-    _this.onRenderLayers = function () {
-      var _this$props = _this.props,
-          onLayerLoading = _this$props.onLayerLoading,
-          onReady = _this$props.onReady;
-      var layers = _this.layerManager.layers;
-
-
+class LayerManager extends PureComponent {
+  constructor(props) {
+    super(props);
+    _defineProperty(this, "onRenderLayers", () => {
+      const {
+        onLayerLoading,
+        onReady
+      } = this.props;
+      const {
+        layers
+      } = this.layerManager;
       if (layers && layers.length) {
         if (onLayerLoading) onLayerLoading(true);
-
-        _this.layerManager.renderLayers().then(function (layers) {
+        this.layerManager.renderLayers().then(layers => {
           if (onReady) onReady(layers);
           if (onLayerLoading) onLayerLoading(false);
         });
       }
-    };
-
-    _this.fitMapToLayer = function (layerId) {
-      return _this.layerManager.fitMapToLayer(layerId);
-    };
-
-    var map = props.map,
-        plugin = props.plugin;
-
-    _this.layerManager = new LayerManager(map, plugin);
-    return _this;
+    });
+    _defineProperty(this, "fitMapToLayer", layerId => this.layerManager.fitMapToLayer(layerId));
+    const {
+      map,
+      plugin
+    } = props;
+    this.layerManager = new LayerManager$1(map, plugin);
   }
-
-  createClass(LayerManager$$1, [{
-    key: 'componentDidMount',
-    value: function componentDidMount() {
-      this.onRenderLayers();
+  componentDidMount() {
+    this.onRenderLayers();
+  }
+  componentDidUpdate() {
+    this.onRenderLayers();
+  }
+  render() {
+    const {
+      children,
+      layersSpec
+    } = this.props;
+    if (children && Children.count(children)) {
+      return Children.map(children, (child, i) => child && /*#__PURE__*/cloneElement(child, {
+        layerManager: this.layerManager,
+        zIndex: child.props.zIndex || 1000 - i
+      }));
     }
-  }, {
-    key: 'componentDidUpdate',
-    value: function componentDidUpdate() {
-      this.onRenderLayers();
+    if (layersSpec && layersSpec.length) {
+      return /*#__PURE__*/React.createElement(Fragment, null, layersSpec.map((spec, i) => /*#__PURE__*/React.createElement(Layer, _extends({
+        key: spec.id
+      }, spec, {
+        zIndex: spec.zIndex || 1000 - i,
+        layerManager: this.layerManager
+      }))));
     }
-  }, {
-    key: 'render',
-    value: function render() {
-      var _this2 = this;
-
-      var _props = this.props,
-          children = _props.children,
-          layersSpec = _props.layersSpec;
-
-
-      if (children && Children.count(children)) {
-        return Children.map(children, function (child, i) {
-          return child && cloneElement(child, {
-            layerManager: _this2.layerManager,
-            zIndex: child.props.zIndex || 1000 - i
-          });
-        });
-      }
-
-      if (layersSpec && layersSpec.length) {
-        return React.createElement(
-          Fragment,
-          null,
-          layersSpec.map(function (spec, i) {
-            return React.createElement(Layer, _extends({
-              key: spec.id
-            }, spec, {
-              zIndex: spec.zIndex || 1000 - i,
-              layerManager: _this2.layerManager
-            }));
-          })
-        );
-      }
-
-      return null;
-    }
-  }]);
-  return LayerManager$$1;
-}(PureComponent);
-
-LayerManager$1.propTypes = {
+    return null;
+  }
+}
+_defineProperty(LayerManager, "propTypes", {
   map: PropTypes.object.isRequired,
   plugin: PropTypes.func.isRequired,
   layersSpec: PropTypes.arrayOf(PropTypes.object),
   children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node]),
   onLayerLoading: PropTypes.func,
   onReady: PropTypes.func
-};
-LayerManager$1.defaultProps = {
+});
+_defineProperty(LayerManager, "defaultProps", {
   children: [],
   layersSpec: [],
   onLayerLoading: null,
   onReady: null
-};
+});
 
-export { LayerManager$1 as LayerManager, Layer };
+export { Layer, LayerManager };

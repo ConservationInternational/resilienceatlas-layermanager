@@ -3,8 +3,6 @@ import PropTypes from 'prop-types';
 import Manager from '../layer-manager';
 import Layer from './layer';
 
-import debounce from 'lodash/debounce';
-
 class LayerManager extends PureComponent {
   static propTypes = {
     map: PropTypes.object.isRequired,

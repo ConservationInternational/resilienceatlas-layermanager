@@ -1,9 +1,10 @@
-import babel from 'rollup-plugin-babel';
-import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
-import { uglify } from 'rollup-plugin-uglify';
-import { minify } from 'uglify-es';
-import pkg from './package.json';
+import babel from '@rollup/plugin-babel';
+import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import terser from '@rollup/plugin-terser';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pkg = require('./package.json');
 
 const name = 'LayerManager';
 const path = 'dist/layer-manager';
@@ -20,18 +21,22 @@ const globals = {
 };
 const external = Object.keys(globals);
 const babelOptions = () => ({
+  babelHelpers: 'bundled',
   babelrc: false,
-  presets: [['env', { modules: false }], 'react'],
+  presets: [
+    ['@babel/preset-env', { 
+      modules: false,
+      targets: '> 0.5%, last 2 versions, Firefox ESR, not dead, not IE 11'
+    }],
+    '@babel/preset-react'
+  ],
   plugins: [
-    'transform-class-properties',
-    'transform-object-rest-spread',
-    'external-helpers',
+    '@babel/plugin-transform-class-properties',
+    '@babel/plugin-transform-object-rest-spread',
     [
       'module-resolver',
       {
-        root: [
-          './src/**'
-        ],
+        root: ['./src'],
         extensions: ['.js', '.jsx']
       }
     ]
@@ -68,7 +73,7 @@ export default [
       globals,
     },
     external,
-    plugins: [babel(babelOptions()), resolve(), commonjs(), uglify({}, minify)]
+    plugins: [babel(babelOptions()), resolve(), commonjs(), terser()]
   },
   // Components
   {

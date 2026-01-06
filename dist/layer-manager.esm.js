@@ -1,129 +1,101 @@
-import isEqual from 'lodash/isEqual';
 import isEmpty from 'lodash/isEmpty';
 import debounce from 'lodash/debounce';
+import isEqual from 'lodash/isEqual';
 import axios, { CancelToken } from 'axios';
 import compact from 'lodash/compact';
 
-var classCallCheck = function (instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
+function _defineProperty(e, r, t) {
+  return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+    value: t,
+    enumerable: true,
+    configurable: true,
+    writable: true
+  }) : e[r] = t, e;
+}
+function ownKeys(e, r) {
+  var t = Object.keys(e);
+  if (Object.getOwnPropertySymbols) {
+    var o = Object.getOwnPropertySymbols(e);
+    r && (o = o.filter(function (r) {
+      return Object.getOwnPropertyDescriptor(e, r).enumerable;
+    })), t.push.apply(t, o);
   }
-};
-
-var createClass = function () {
-  function defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, descriptor.key, descriptor);
-    }
-  }
-
-  return function (Constructor, protoProps, staticProps) {
-    if (protoProps) defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) defineProperties(Constructor, staticProps);
-    return Constructor;
-  };
-}();
-
-var defineProperty = function (obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
+  return t;
+}
+function _objectSpread2(e) {
+  for (var r = 1; r < arguments.length; r++) {
+    var t = null != arguments[r] ? arguments[r] : {};
+    r % 2 ? ownKeys(Object(t), true).forEach(function (r) {
+      _defineProperty(e, r, t[r]);
+    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) {
+      Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
     });
-  } else {
-    obj[key] = value;
   }
-
-  return obj;
-};
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
+  return e;
+}
+function _toPrimitive(t, r) {
+  if ("object" != typeof t || !t) return t;
+  var e = t[Symbol.toPrimitive];
+  if (void 0 !== e) {
+    var i = e.call(t, r);
+    if ("object" != typeof i) return i;
+    throw new TypeError("@@toPrimitive must return a primitive value.");
   }
+  return ("string" === r ? String : Number)(t);
+}
+function _toPropertyKey(t) {
+  var i = _toPrimitive(t, "string");
+  return "symbol" == typeof i ? i : i + "";
+}
 
-  return target;
-};
-
-var LayerModel = function () {
-  function LayerModel() {
-    var layerSpec = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    classCallCheck(this, LayerModel);
-    this.opacity = 1;
-    this.visibility = true;
-
-    Object.assign(this, layerSpec, { changedAttributes: {} });
+class LayerModel {
+  constructor(layerSpec = {}) {
+    _defineProperty(this, "opacity", 1);
+    _defineProperty(this, "visibility", true);
+    Object.assign(this, layerSpec, {
+      changedAttributes: {}
+    });
   }
+  get(key) {
+    return this[key];
+  }
+  set(key, value) {
+    this[key] = value;
+    return this;
+  }
+  update(layerSpec) {
+    const prevData = _objectSpread2({}, this);
+    const nextData = _objectSpread2({}, layerSpec);
 
-  createClass(LayerModel, [{
-    key: 'get',
-    value: function get$$1(key) {
-      return this[key];
-    }
-  }, {
-    key: 'set',
-    value: function set$$1(key, value) {
-      this[key] = value;
-      return this;
-    }
-  }, {
-    key: 'update',
-    value: function update(layerSpec) {
-      var _this = this;
-
-      var prevData = _extends({}, this);
-      var nextData = _extends({}, layerSpec);
-
-      // reseting changedAttributes for every update
-      this.set('changedAttributes', {});
-
-      Object.keys(nextData).forEach(function (k) {
-        if (!isEqual(prevData[k], nextData[k])) {
-          _this.changedAttributes[k] = nextData[k];
-          _this.set(k, nextData[k]);
-        }
-      });
-    }
-  }]);
-  return LayerModel;
-}();
-
-function checkPluginProperties(plugin) {
-  if (plugin) {
-    var requiredProperties = ['add', 'remove', 'setVisibility', 'setOpacity', 'setEvents', 'setZIndex', 'setLayerConfig', 'setParams', 'setDecodeParams', 'getLayerByProvider'];
-
-    requiredProperties.forEach(function (property) {
-      if (!plugin[property]) {
-        console.error('The ' + property + ' function is required for layer manager plugins');
+    // reseting changedAttributes for every update
+    this.set('changedAttributes', {});
+    Object.keys(nextData).forEach(k => {
+      if (!isEqual(prevData[k], nextData[k])) {
+        this.changedAttributes[k] = nextData[k];
+        this.set(k, nextData[k]);
       }
     });
   }
 }
 
-var LayerManager = function () {
-  function LayerManager(map, Plugin) {
-    var _this = this;
-
-    classCallCheck(this, LayerManager);
-    this.requestLayerSuccess = debounce(function (layerModel) {
-      _this.plugin.add(layerModel);
-      _this.plugin.setZIndex(layerModel, layerModel.zIndex);
-      _this.plugin.setOpacity(layerModel, layerModel.opacity);
-      _this.plugin.setVisibility(layerModel, layerModel.visibility);
-    }, 50);
-
+function checkPluginProperties(plugin) {
+  if (plugin) {
+    const requiredProperties = ['add', 'remove', 'setVisibility', 'setOpacity', 'setEvents', 'setZIndex', 'setLayerConfig', 'setParams', 'setDecodeParams', 'getLayerByProvider'];
+    requiredProperties.forEach(property => {
+      if (!plugin[property]) {
+        console.error(`The ${property} function is required for layer manager plugins`);
+      }
+    });
+  }
+}
+class LayerManager {
+  constructor(map, Plugin) {
+    _defineProperty(this, "requestLayerSuccess", debounce(layerModel => {
+      this.plugin.add(layerModel);
+      this.plugin.setZIndex(layerModel, layerModel.zIndex);
+      this.plugin.setOpacity(layerModel, layerModel.opacity);
+      this.plugin.setVisibility(layerModel, layerModel.visibility);
+    }, 50));
     this.map = map;
     this.plugin = new Plugin(this.map);
     checkPluginProperties(this.plugin);
@@ -134,345 +106,260 @@ var LayerManager = function () {
   /**
    * Render layers
    */
-
-
-  createClass(LayerManager, [{
-    key: 'renderLayers',
-    value: function renderLayers() {
-      var _this2 = this;
-
-      if (this.layers.length > 0) {
-        this.layers.forEach(function (layerModel) {
-          var changedAttributes = layerModel.changedAttributes;
-          var sqlParams = changedAttributes.sqlParams,
-              params = changedAttributes.params,
-              layerConfig = changedAttributes.layerConfig;
-
-          var hasChanged = Object.keys(changedAttributes).length > 0;
-          var shouldUpdate = sqlParams || params || layerConfig;
-
-          if (!shouldUpdate) {
-            // If layer exists and didn't change don't do anything
-            if (layerModel.mapLayer && !hasChanged) {
-              return false;
-            }
-
-            // In case has changed, just update it else if (
-            if (layerModel.mapLayer && hasChanged) {
-              return _this2.updateLayer(layerModel);
-            }
+  renderLayers() {
+    if (this.layers.length > 0) {
+      this.layers.forEach(layerModel => {
+        const {
+          changedAttributes
+        } = layerModel;
+        const {
+          sqlParams,
+          params,
+          layerConfig
+        } = changedAttributes;
+        const hasChanged = Object.keys(changedAttributes).length > 0;
+        const shouldUpdate = sqlParams || params || layerConfig;
+        if (!shouldUpdate) {
+          // If layer exists and didn't change don't do anything
+          if (layerModel.mapLayer && !hasChanged) {
+            return false;
           }
 
-          if (layerModel.mapLayer && shouldUpdate) {
-            _this2.updateLayer(layerModel);
+          // In case has changed, just update it else if (
+          if (layerModel.mapLayer && hasChanged) {
+            return this.updateLayer(layerModel);
           }
-
-          // adds a new promise to `this.promises` every time it gets called
-          _this2.requestLayer(layerModel);
-          _this2.requestLayerBounds(layerModel);
-
-          // reset changedAttributes
-          return layerModel.set('changedAttributes', {});
-        });
-
-        if (Object.keys(this.promises).length === 0) {
-          return Promise.resolve(this.layers);
+        }
+        if (layerModel.mapLayer && shouldUpdate) {
+          this.updateLayer(layerModel);
         }
 
-        return Promise.all(Object.values(this.promises)).then(function () {
-          return _this2.layers;
-        }).then(function () {
-          _this2.promises = {};
-        });
-      }
+        // adds a new promise to `this.promises` every time it gets called
+        this.requestLayer(layerModel);
+        this.requestLayerBounds(layerModel);
 
-      // By default it will return a empty layers
-      return Promise.resolve(this.layers);
-    }
-
-    /**
-     * Add layers
-     * @param {Array} layers
-     * @param {Object} layerOptions
-     */
-
-  }, {
-    key: 'add',
-    value: function add(layers) {
-      var _this3 = this;
-
-      var layerOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
-        opacity: 1,
-        visibility: true,
-        zIndex: 0,
-        interactivity: null
-      };
-
-      if (typeof layers === 'undefined') {
-        console.error('layers is required');
-        return this;
-      }
-
-      if (!Array.isArray(layers)) {
-        console.error('layers should be an array');
-        return this;
-      }
-
-      layers.forEach(function (layer) {
-        var existingLayer = _this3.layers.find(function (l) {
-          return l.id === layer.id;
-        });
-        var nextModel = _extends({}, layer, layerOptions);
-
-        if (existingLayer) {
-          existingLayer.update(nextModel);
-        } else {
-          _this3.layers.push(new LayerModel(nextModel));
-        }
+        // reset changedAttributes
+        return layerModel.set('changedAttributes', {});
       });
-
-      return this.layers;
-    }
-
-    /**
-     * Updating a specific layer
-     * @param  {Object} layerModel
-     */
-
-  }, {
-    key: 'updateLayer',
-    value: function updateLayer(layerModel) {
-      var _layerModel$changedAt = layerModel.changedAttributes,
-          opacity = _layerModel$changedAt.opacity,
-          visibility = _layerModel$changedAt.visibility,
-          zIndex = _layerModel$changedAt.zIndex,
-          params = _layerModel$changedAt.params,
-          sqlParams = _layerModel$changedAt.sqlParams,
-          decodeParams = _layerModel$changedAt.decodeParams,
-          layerConfig = _layerModel$changedAt.layerConfig,
-          events = _layerModel$changedAt.events;
-
-
-      if (typeof opacity !== 'undefined') {
-        this.plugin.setOpacity(layerModel, opacity);
+      if (Object.keys(this.promises).length === 0) {
+        return Promise.resolve(this.layers);
       }
-      if (typeof visibility !== 'undefined') {
-        this.plugin.setOpacity(layerModel, !visibility ? 0 : layerModel.opacity);
-      }
-      if (typeof zIndex !== 'undefined') {
-        this.plugin.setZIndex(layerModel, zIndex);
-      }
-      if (typeof events !== 'undefined') {
-        this.setEvents(layerModel);
-      }
-
-      if (!isEmpty(layerConfig)) this.plugin.setLayerConfig(layerModel);
-      if (!isEmpty(params)) this.plugin.setParams(layerModel);
-      if (!isEmpty(sqlParams)) this.plugin.setParams(layerModel);
-      if (!isEmpty(decodeParams)) this.plugin.setDecodeParams(layerModel);
-    }
-
-    /**
-     * Remove a layer giving a Layer ID
-     * @param {Array} layerIds
-     */
-
-  }, {
-    key: 'remove',
-    value: function remove(layerIds) {
-      var _this4 = this;
-
-      var layers = this.layers.slice(0);
-      var ids = Array.isArray(layerIds) ? layerIds : [layerIds];
-
-      this.layers.forEach(function (layerModel, index) {
-        if (ids) {
-          if (ids.includes(layerModel.id)) {
-            _this4.plugin.remove(layerModel);
-            layers.splice(index, 1);
-          }
-        } else {
-          _this4.plugin.remove(layerModel);
-        }
+      return Promise.all(Object.values(this.promises)).then(() => this.layers).then(() => {
+        this.promises = {};
       });
-
-      this.layers = ids ? layers : [];
     }
 
-    /**
-     * A namespace to set opacity on selected layer
-     * @param {Array} layerIds
-     * @param {Number} opacity
-     */
+    // By default it will return a empty layers
+    return Promise.resolve(this.layers);
+  }
 
-  }, {
-    key: 'setOpacity',
-    value: function setOpacity(layerIds, opacity) {
-      var _this5 = this;
-
-      var layerModels = this.layers.filter(function (l) {
-        return layerIds.includes(l.id);
-      });
-
-      if (layerModels.length) {
-        layerModels.forEach(function (lm) {
-          _this5.plugin.setOpacity(lm, opacity);
-        });
-      } else {
-        console.error("Can't find the layer");
-      }
-    }
-
-    /**
-     * A namespace to hide or show a selected layer
-     * @param {Array} layerIds
-     * @param {Boolean} visibility
-     */
-
-  }, {
-    key: 'setVisibility',
-    value: function setVisibility(layerIds, visibility) {
-      var _this6 = this;
-
-      var layerModels = this.layers.filter(function (l) {
-        return layerIds.includes(l.id);
-      });
-
-      if (layerModels.length) {
-        layerModels.forEach(function (lm) {
-          _this6.plugin.setVisibility(lm, visibility);
-        });
-      } else {
-        console.error("Can't find the layer");
-      }
-    }
-
-    /**
-     * A namespace to set z-index on selected layer
-     * @param {Array} layerIds
-     * @param {Number} zIndex
-     */
-
-  }, {
-    key: 'setZIndex',
-    value: function setZIndex(layerIds, zIndex) {
-      var _this7 = this;
-
-      var layerModels = this.layers.filter(function (l) {
-        return layerIds.includes(l.id);
-      });
-
-      if (layerModels.length) {
-        layerModels.forEach(function (lm) {
-          _this7.plugin.setZIndex(lm, zIndex);
-        });
-      } else {
-        console.error("Can't find the layer");
-      }
-    }
-
-    /**
-     * A namespace to set events on selected layer
-     * @param  {Object} layerModel
-     */
-
-  }, {
-    key: 'setEvents',
-    value: function setEvents(layerModel) {
-      var events = layerModel.events;
-
-
-      if (events) {
-        // Let's leave the managment of event to the plugin
-        this.plugin.setEvents(layerModel);
-      }
-    }
-  }, {
-    key: 'fitMapToLayer',
-    value: function fitMapToLayer(layerId) {
-      if (typeof this.plugin.fitMapToLayer !== 'function') {
-        console.error('This plugin does not support fitting map bounds to layer yet.');
-        return;
-      }
-
-      var layerModel = this.layers.find(function (l) {
-        return l.id === layerId;
-      });
-
-      if (layerModel) this.plugin.fitMapToLayer(layerModel);
-    }
-  }, {
-    key: 'requestLayer',
-    value: function requestLayer(layerModel) {
-      var _this8 = this;
-
-      var provider = layerModel.provider;
-
-      var method = this.plugin.getLayerByProvider(provider);
-
-      if (!method) {
-        this.promises[layerModel.id] = Promise.reject(new Error(provider + ' provider is not yet supported.'));
-        return false;
-      }
-
-      // Cancel previous/existing request
-      if (this.promises[layerModel.id] && this.promises[layerModel.id].isPending && this.promises[layerModel.id].isPending()) {
-        this.promises[layerModel.id].cancel();
-      }
-
-      // every render method returns a promise that we store in the array
-      // to control when all layers are fetched.
-      this.promises[layerModel.id] = method.call(this, layerModel).then(function (layer) {
-        var mapLayer = layer;
-
-        layerModel.set('mapLayer', mapLayer);
-
-        _this8.requestLayerSuccess(layerModel);
-
-        _this8.setEvents(layerModel);
-      });
-
+  /**
+   * Add layers
+   * @param {Array} layers
+   * @param {Object} layerOptions
+   */
+  add(layers, layerOptions = {
+    opacity: 1,
+    visibility: true,
+    zIndex: 0,
+    interactivity: null
+  }) {
+    if (typeof layers === 'undefined') {
+      console.error('layers is required');
       return this;
     }
-  }, {
-    key: 'requestLayerBounds',
-    value: function requestLayerBounds(layerModel) {
-      var provider = layerModel.provider;
-
-      var method = this.plugin.getLayerBoundsByProvider(provider);
-
-      if (!method) {
-        return false;
-      }
-
-      var promiseHash = layerModel.id + '_bounds';
-      // Cancel previous/existing request
-      if (this.promises[promiseHash] && this.promises[promiseHash].isPending && this.promises[promiseHash].isPending()) {
-        this.promises[promiseHash].cancel();
-      }
-
-      // every render method returns a promise that we store in the array
-      // to control when all layers are fetched.
-      this.promises[promiseHash] = method.call(this, layerModel).then(function (bounds) {
-        layerModel.set('mapLayerBounds', bounds);
-      });
-
+    if (!Array.isArray(layers)) {
+      console.error('layers should be an array');
       return this;
     }
-  }]);
-  return LayerManager;
-}();
+    layers.forEach(layer => {
+      const existingLayer = this.layers.find(l => l.id === layer.id);
+      const nextModel = _objectSpread2(_objectSpread2({}, layer), layerOptions);
+      if (existingLayer) {
+        existingLayer.update(nextModel);
+      } else {
+        this.layers.push(new LayerModel(nextModel));
+      }
+    });
+    return this.layers;
+  }
 
-var headers = {
+  /**
+   * Updating a specific layer
+   * @param  {Object} layerModel
+   */
+  updateLayer(layerModel) {
+    const {
+      opacity,
+      visibility,
+      zIndex,
+      params,
+      sqlParams,
+      decodeParams,
+      layerConfig,
+      events
+    } = layerModel.changedAttributes;
+    if (typeof opacity !== 'undefined') {
+      this.plugin.setOpacity(layerModel, opacity);
+    }
+    if (typeof visibility !== 'undefined') {
+      this.plugin.setOpacity(layerModel, !visibility ? 0 : layerModel.opacity);
+    }
+    if (typeof zIndex !== 'undefined') {
+      this.plugin.setZIndex(layerModel, zIndex);
+    }
+    if (typeof events !== 'undefined') {
+      this.setEvents(layerModel);
+    }
+    if (!isEmpty(layerConfig)) this.plugin.setLayerConfig(layerModel);
+    if (!isEmpty(params)) this.plugin.setParams(layerModel);
+    if (!isEmpty(sqlParams)) this.plugin.setParams(layerModel);
+    if (!isEmpty(decodeParams)) this.plugin.setDecodeParams(layerModel);
+  }
+
+  /**
+   * Remove a layer giving a Layer ID
+   * @param {Array} layerIds
+   */
+  remove(layerIds) {
+    const layers = this.layers.slice(0);
+    const ids = Array.isArray(layerIds) ? layerIds : [layerIds];
+    this.layers.forEach((layerModel, index) => {
+      if (ids) {
+        if (ids.includes(layerModel.id)) {
+          this.plugin.remove(layerModel);
+          layers.splice(index, 1);
+        }
+      } else {
+        this.plugin.remove(layerModel);
+      }
+    });
+    this.layers = ids ? layers : [];
+  }
+
+  /**
+   * A namespace to set opacity on selected layer
+   * @param {Array} layerIds
+   * @param {Number} opacity
+   */
+  setOpacity(layerIds, opacity) {
+    const layerModels = this.layers.filter(l => layerIds.includes(l.id));
+    if (layerModels.length) {
+      layerModels.forEach(lm => {
+        this.plugin.setOpacity(lm, opacity);
+      });
+    } else {
+      console.error("Can't find the layer");
+    }
+  }
+
+  /**
+   * A namespace to hide or show a selected layer
+   * @param {Array} layerIds
+   * @param {Boolean} visibility
+   */
+  setVisibility(layerIds, visibility) {
+    const layerModels = this.layers.filter(l => layerIds.includes(l.id));
+    if (layerModels.length) {
+      layerModels.forEach(lm => {
+        this.plugin.setVisibility(lm, visibility);
+      });
+    } else {
+      console.error("Can't find the layer");
+    }
+  }
+
+  /**
+   * A namespace to set z-index on selected layer
+   * @param {Array} layerIds
+   * @param {Number} zIndex
+   */
+  setZIndex(layerIds, zIndex) {
+    const layerModels = this.layers.filter(l => layerIds.includes(l.id));
+    if (layerModels.length) {
+      layerModels.forEach(lm => {
+        this.plugin.setZIndex(lm, zIndex);
+      });
+    } else {
+      console.error("Can't find the layer");
+    }
+  }
+
+  /**
+   * A namespace to set events on selected layer
+   * @param  {Object} layerModel
+   */
+  setEvents(layerModel) {
+    const {
+      events
+    } = layerModel;
+    if (events) {
+      // Let's leave the managment of event to the plugin
+      this.plugin.setEvents(layerModel);
+    }
+  }
+  fitMapToLayer(layerId) {
+    if (typeof this.plugin.fitMapToLayer !== 'function') {
+      console.error('This plugin does not support fitting map bounds to layer yet.');
+      return;
+    }
+    const layerModel = this.layers.find(l => l.id === layerId);
+    if (layerModel) this.plugin.fitMapToLayer(layerModel);
+  }
+  requestLayer(layerModel) {
+    const {
+      provider
+    } = layerModel;
+    const method = this.plugin.getLayerByProvider(provider);
+    if (!method) {
+      this.promises[layerModel.id] = Promise.reject(new Error(`${provider} provider is not yet supported.`));
+      return false;
+    }
+
+    // Cancel previous/existing request
+    if (this.promises[layerModel.id] && this.promises[layerModel.id].isPending && this.promises[layerModel.id].isPending()) {
+      this.promises[layerModel.id].cancel();
+    }
+
+    // every render method returns a promise that we store in the array
+    // to control when all layers are fetched.
+    this.promises[layerModel.id] = method.call(this, layerModel).then(layer => {
+      const mapLayer = layer;
+      layerModel.set('mapLayer', mapLayer);
+      this.requestLayerSuccess(layerModel);
+      this.setEvents(layerModel);
+    });
+    return this;
+  }
+  requestLayerBounds(layerModel) {
+    const {
+      provider
+    } = layerModel;
+    const method = this.plugin.getLayerBoundsByProvider(provider);
+    if (!method) {
+      return false;
+    }
+    const promiseHash = `${layerModel.id}_bounds`;
+    // Cancel previous/existing request
+    if (this.promises[promiseHash] && this.promises[promiseHash].isPending && this.promises[promiseHash].isPending()) {
+      this.promises[promiseHash].cancel();
+    }
+
+    // every render method returns a promise that we store in the array
+    // to control when all layers are fetched.
+    this.promises[promiseHash] = method.call(this, layerModel).then(bounds => {
+      layerModel.set('mapLayerBounds', bounds);
+    });
+    return this;
+  }
+}
+
+const headers = {
   'Content-Type': 'application/json'
 };
-
-var get$1 = function get$$1(url) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  return axios.get(url, _extends({
-    headers: headers
-  }, options));
-};
+const get = (url, options = {}) => axios.get(url, _objectSpread2({
+  headers
+}, options));
 
 /**
  * Params should have this format => { key:'xxx', key2:'xxx' }
@@ -480,12 +367,10 @@ var get$1 = function get$$1(url) {
  * @param {String} originalStr
  * @param {Object} params
  */
-var substitution = function substitution(originalStr) {
-  var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-  var str = originalStr;
-  Object.keys(params).forEach(function (key) {
-    str = str.replace(new RegExp('{{' + key + '}}', 'g'), params[key]).replace(new RegExp('{' + key + '}', 'g'), params[key]);
+const substitution = (originalStr, params = {}) => {
+  let str = originalStr;
+  Object.keys(params).forEach(key => {
+    str = str.replace(new RegExp(`{{${key}}}`, 'g'), params[key]).replace(new RegExp(`{${key}}`, 'g'), params[key]);
   });
   return str;
 };
@@ -496,36 +381,25 @@ var substitution = function substitution(originalStr) {
  * @param {String} originalStr
  * @param {Object} params
  */
-var concatenation = function concatenation(originalStr) {
-  var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-  var str = originalStr;
-  var sql = void 0;
-
-  Object.keys(params).forEach(function (key) {
-    sql = '' + compact(Object.keys(params[key]).map(function (k) {
-      var value = params[key][k];
-
+const concatenation = (originalStr, params = {}) => {
+  let str = originalStr;
+  let sql;
+  Object.keys(params).forEach(key => {
+    sql = `${compact(Object.keys(params[key]).map(k => {
+      const value = params[key][k];
       if (Array.isArray(value) && !!value.length) {
-        var mappedValue = value.map(function (v) {
-          return typeof v !== 'number' ? '\'' + v + '\'' : v;
-        });
-        return k + ' IN (' + mappedValue.join(', ') + ')';
+        const mappedValue = value.map(v => typeof v !== 'number' ? `'${v}'` : v);
+        return `${k} IN (${mappedValue.join(', ')})`;
       }
-
       if (!Array.isArray(value) && value) {
-        return typeof value !== 'number' ? k + ' = \'' + value + '\'' : k + ' = ' + value;
+        return typeof value !== 'number' ? `${k} = '${value}'` : `${k} = ${value}`;
       }
-
       return null;
-    })).join(' AND ');
-
-    if (sql && key.startsWith('where')) sql = 'WHERE ' + sql;else if (sql && key.startsWith('and')) sql = 'AND ' + sql;else sql = '';
-
-    str = str.replace(new RegExp('{{' + key + '}}', 'g'), sql);
-    str = str.replace(new RegExp('{' + key + '}', 'g'), sql);
+    })).join(' AND ')}`;
+    if (sql && key.startsWith('where')) sql = `WHERE ${sql}`;else if (sql && key.startsWith('and')) sql = `AND ${sql}`;else sql = '';
+    str = str.replace(new RegExp(`{{${key}}}`, 'g'), sql);
+    str = str.replace(new RegExp(`{${key}}`, 'g'), sql);
   });
-
   return str;
 };
 
@@ -535,207 +409,195 @@ var concatenation = function concatenation(originalStr) {
  * @param {Object} params
  * @param {Object} sqlParams
  */
-var replace = function replace(originalStr) {
-  var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  var sqlParams = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-  var str = originalStr;
-
+const replace = (originalStr, params = {}, sqlParams = {}) => {
+  let str = originalStr;
   if (typeof str === 'string') {
     str = substitution(str, params);
     str = concatenation(str, sqlParams);
   }
-
   return str;
 };
 
 // Symbol to indicate a canceled request
-var CANCELED = Symbol('CANCELED');
-
-var fetchTile = function fetchTile(layerModel) {
-  var layerConfig = layerModel.layerConfig,
-      params = layerModel.params,
-      sqlParams = layerModel.sqlParams,
-      interactivity = layerModel.interactivity;
-
-
-  var layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
-
-  var layerTpl = JSON.stringify({
+const CANCELED$1 = Symbol('CANCELED');
+const fetchTile = layerModel => {
+  const {
+    layerConfig,
+    params,
+    sqlParams,
+    interactivity
+  } = layerModel;
+  const layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
+  const layerTpl = JSON.stringify({
     version: '1.3.0',
     stat_tag: 'API',
-    layers: layerConfigParsed.body.layers.map(function (l) {
+    layers: layerConfigParsed.body.layers.map(l => {
       if (!!interactivity && interactivity.length) {
-        return _extends({}, l, { options: _extends({}, l.options, { interactivity: interactivity.split(', ') }) });
+        return _objectSpread2(_objectSpread2({}, l), {}, {
+          options: _objectSpread2(_objectSpread2({}, l.options), {}, {
+            interactivity: interactivity.split(', ')
+          })
+        });
       }
       return l;
     })
   });
-  var apiParams = '?stat_tag=API&config=' + encodeURIComponent(layerTpl);
-
-  var url = 'https://' + layerConfigParsed.account + '-cdn.resilienceatlas.org/user/ra/api/v1/map' + apiParams;
-
-  var layerRequest = layerModel.layerRequest;
-
+  const apiParams = `?stat_tag=API&config=${encodeURIComponent(layerTpl)}`;
+  const url = `https://${layerConfigParsed.account}-cdn.resilienceatlas.org/user/ra/api/v1/map${apiParams}`;
+  const {
+    layerRequest
+  } = layerModel;
   if (layerRequest) {
     layerRequest.cancel('Operation canceled by the user.');
   }
-
-  var layerRequestSource = CancelToken.source();
+  const layerRequestSource = CancelToken.source();
   layerModel.set('layerRequest', layerRequestSource);
-
-  var newLayerRequest = get$1(url, { cancelToken: layerRequestSource.token }).then(function (res) {
+  const newLayerRequest = get(url, {
+    cancelToken: layerRequestSource.token
+  }).then(res => {
     if (res.status > 400) {
       console.error(res);
       return false;
     }
-
     return res.data;
-  }).catch(function (err) {
+  }).catch(err => {
     // Silently handle canceled requests - return CANCELED symbol instead of rejecting
     if (axios.isCancel(err)) {
-      return CANCELED;
+      return CANCELED$1;
     }
     throw err;
   });
-
   return newLayerRequest;
 };
-
-var fetchBounds = function fetchBounds(layerModel) {
-  var layerConfig = layerModel.layerConfig,
-      params = layerModel.params,
-      sqlParams = layerModel.sqlParams,
-      type = layerModel.type;
-  var sql = layerModel.sql;
-
-
+const fetchBounds = layerModel => {
+  const {
+    layerConfig,
+    params,
+    sqlParams,
+    type
+  } = layerModel;
+  let {
+    sql
+  } = layerModel;
   if (type === 'raster') {
-    sql = 'SELECT ST_Union(ST_Transform(ST_Envelope(the_raster_webmercator), 4326)) as the_geom FROM (' + sql + ') as t';
+    sql = `SELECT ST_Union(ST_Transform(ST_Envelope(the_raster_webmercator), 4326)) as the_geom FROM (${sql}) as t`;
   }
-
-  var layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
-
-  var s = '\n    SELECT ST_XMin(ST_Extent(the_geom)) as minx,\n    ST_YMin(ST_Extent(the_geom)) as miny,\n    ST_XMax(ST_Extent(the_geom)) as maxx,\n    ST_YMax(ST_Extent(the_geom)) as maxy\n    from (' + sql + ') as subq\n  ';
-
-  var url = 'https://' + layerConfigParsed.account + '-cdn.resilienceatlas.org/user/ra/api/v2/sql?q=' + s.replace(/\n/g, ' ');
-
-  var boundsRequest = layerModel.boundsRequest;
-
+  const layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
+  const s = `
+    SELECT ST_XMin(ST_Extent(the_geom)) as minx,
+    ST_YMin(ST_Extent(the_geom)) as miny,
+    ST_XMax(ST_Extent(the_geom)) as maxx,
+    ST_YMax(ST_Extent(the_geom)) as maxy
+    from (${sql}) as subq
+  `;
+  const url = `https://${layerConfigParsed.account}-cdn.resilienceatlas.org/user/ra/api/v2/sql?q=${s.replace(/\n/g, ' ')}`;
+  const {
+    boundsRequest
+  } = layerModel;
   if (boundsRequest) {
     boundsRequest.cancel('Operation canceled by the user.');
   }
-
-  var boundsRequestSource = CancelToken.source();
+  const boundsRequestSource = CancelToken.source();
   layerModel.set('boundsRequest', boundsRequestSource);
-
-  var newBoundsRequest = get$1(url, { cancelToken: boundsRequestSource.token }).then(function (res) {
+  const newBoundsRequest = get(url, {
+    cancelToken: boundsRequestSource.token
+  }).then(res => {
     if (res.status > 400) {
       console.error(res);
       return false;
     }
-
     return res.data;
-  }).catch(function (err) {
+  }).catch(err => {
     // Silently handle canceled requests - return CANCELED symbol instead of rejecting
     if (axios.isCancel(err)) {
-      return CANCELED;
+      return CANCELED$1;
     }
     throw err;
   });
-
   return newBoundsRequest;
 };
 
-var _ref = typeof window !== 'undefined' ? window : {},
-    L = _ref.L;
-
-var CartoLayer = function CartoLayer(layerModel) {
-  if (!L) throw new Error('Leaflet must be defined.');
-
-  var layerConfig = layerModel.layerConfig,
-      params = layerModel.params,
-      sqlParams = layerModel.sqlParams,
-      interactivity = layerModel.interactivity;
-
-  var layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
-
-  return new Promise(function (resolve, reject) {
-    fetchTile(layerModel).then(function (response) {
+const {
+  L: L$8
+} = typeof window !== 'undefined' ? window : {};
+const CartoLayer = layerModel => {
+  if (!L$8) throw new Error('Leaflet must be defined.');
+  const {
+    layerConfig,
+    params,
+    sqlParams,
+    interactivity
+  } = layerModel;
+  layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
+  return new Promise((resolve, reject) => {
+    fetchTile(layerModel).then(response => {
       // Handle canceled requests - don't process further
-      if (response === CANCELED) {
+      if (response === CANCELED$1) {
         return; // Promise will stay pending, which is fine for canceled requests
       }
-
-      var tileUrl = 'https://' + response.cdn_url.https + '/ra/api/v1/map/' + response.layergroupid + '/{z}/{x}/{y}.png';
-      var layer = L.tileLayer(tileUrl);
+      const tileUrl = `https://${response.cdn_url.https}/ra/api/v1/map/${response.layergroupid}/{z}/{x}/{y}.png`;
+      const layer = L$8.tileLayer(tileUrl);
 
       // Add interactivity
       if (interactivity && interactivity.length) {
-        var gridUrl = 'https://' + response.cdn_url.https + '/ra/api/v1/map/' + response.layergroupid + '/0/{z}/{x}/{y}.grid.json';
-        var interactiveLayer = L.utfGrid(gridUrl);
-
-        var LayerGroup = L.LayerGroup.extend({
+        const gridUrl = `https://${response.cdn_url.https}/ra/api/v1/map/${response.layergroupid}/0/{z}/{x}/{y}.grid.json`;
+        const interactiveLayer = L$8.utfGrid(gridUrl);
+        const LayerGroup = L$8.LayerGroup.extend({
           group: true,
-          setOpacity: function setOpacity(opacity) {
-            layerModel.mapLayer.getLayers().forEach(function (l) {
+          setOpacity: opacity => {
+            layerModel.mapLayer.getLayers().forEach(l => {
               l.setOpacity(opacity);
             });
           }
         });
-
         return resolve(new LayerGroup([layer, interactiveLayer]));
       }
-
       return resolve(layer);
-    }).catch(function (err) {
-      return reject(err);
-    });
+    }).catch(err => reject(err));
   });
 };
-
-CartoLayer.getBounds = function (layerModel) {
-  if (!L) throw new Error('Leaflet must be defined.');
-
-  return new Promise(function (resolve, reject) {
-    fetchBounds(layerModel).then(function (response) {
+CartoLayer.getBounds = layerModel => {
+  if (!L$8) throw new Error('Leaflet must be defined.');
+  return new Promise((resolve, reject) => {
+    fetchBounds(layerModel).then(response => {
       // Handle canceled requests - don't process further
-      if (response === CANCELED) {
+      if (response === CANCELED$1) {
         return; // Promise will stay pending, which is fine for canceled requests
       }
-
-      var _response$rows$ = response.rows[0],
-          maxy = _response$rows$.maxy,
-          maxx = _response$rows$.maxx,
-          miny = _response$rows$.miny,
-          minx = _response$rows$.minx;
-
-      var bounds = [[maxy, maxx], [miny, minx]];
-
+      const {
+        maxy,
+        maxx,
+        miny,
+        minx
+      } = response.rows[0];
+      const bounds = [[maxy, maxx], [miny, minx]];
       return resolve(bounds);
     }).catch(reject);
   });
 };
 
-var _ref$1 = typeof window !== 'undefined' ? window : {},
-    L$1 = _ref$1.L;
-
-var CanvasLayer = L$1 && L$1.GridLayer.extend({
+const {
+  L: L$7
+} = typeof window !== 'undefined' ? window : {};
+const CanvasLayer = L$7 && L$7.GridLayer.extend({
   tiles: {},
-  createTile: function createTile(_ref2, done) {
-    var _this = this;
-
-    var x = _ref2.x,
-        y = _ref2.y,
-        z = _ref2.z;
-    var params = this.options.params;
-
-
-    var id = replace(params.url, _extends({ x: x, y: y, z: z }, params));
+  createTile({
+    x,
+    y,
+    z
+  }, done) {
+    const {
+      params
+    } = this.options;
+    const id = replace(params.url, _objectSpread2({
+      x,
+      y,
+      z
+    }, params));
 
     // Delete all tiles from others zooms;
-    var tilesKeys = Object.keys(this.tiles);
-    for (var i = 0; i < tilesKeys.length; i++) {
+    const tilesKeys = Object.keys(this.tiles);
+    for (let i = 0; i < tilesKeys.length; i++) {
       if (this.tiles[tilesKeys[i]].z !== z) {
         delete this.tiles[tilesKeys[i]];
       }
@@ -743,126 +605,132 @@ var CanvasLayer = L$1 && L$1.GridLayer.extend({
 
     // create a <canvas> element for drawing
     this.done = done;
-
-    var tile = L$1.DomUtil.create('canvas', 'leaflet-tile');
-    var ctx = tile.getContext('2d');
-    var size = this.getTileSize();
+    const tile = L$7.DomUtil.create('canvas', 'leaflet-tile');
+    const ctx = tile.getContext('2d');
+    const size = this.getTileSize();
 
     // setup tile width and height according to the options
     tile.width = size.x;
     tile.height = size.y;
 
     // getTile
-    this.getTile({ x: x, y: y, z: z }).then(function (image) {
-      _this.cacheTile(_extends({ id: id, tile: tile, ctx: ctx, image: image }, { x: x, y: y, z: z }));
-      _this.drawCanvas(id);
+    this.getTile({
+      x,
+      y,
+      z
+    }).then(image => {
+      this.cacheTile(_objectSpread2({
+        id,
+        tile,
+        ctx,
+        image
+      }, {
+        x,
+        y,
+        z
+      }));
+      this.drawCanvas(id);
 
       // return the tile so it can be rendered on screen
       done(null, tile);
-    }).catch(function (err) {
+    }).catch(err => {
       done(err, tile);
     });
-
     return tile;
   },
-  getTile: function getTile(_ref3) {
-    var _this2 = this;
-
-    var x = _ref3.x,
-        y = _ref3.y,
-        z = _ref3.z;
-    var _options = this.options,
-        params = _options.params,
-        sqlParams = _options.sqlParams;
-    var url = params.url,
-        _params$dataMaxZoom = params.dataMaxZoom,
-        dataMaxZoom = _params$dataMaxZoom === undefined ? 20 : _params$dataMaxZoom;
-
-    var zsteps = z - dataMaxZoom;
-    var id = replace(params.url, _extends({ x: x, y: y, z: z }, params));
-
-    var coords = { x: x, y: y, z: z };
-
+  getTile({
+    x,
+    y,
+    z
+  }) {
+    const {
+      params,
+      sqlParams
+    } = this.options;
+    const {
+      url,
+      dataMaxZoom = 20
+    } = params;
+    const zsteps = z - dataMaxZoom;
+    const id = replace(params.url, _objectSpread2({
+      x,
+      y,
+      z
+    }, params));
+    let coords = {
+      x,
+      y,
+      z
+    };
     if (zsteps > 0) {
       coords = {
-        x: Math.floor(x / Math.pow(2, zsteps)),
-        y: Math.floor(y / Math.pow(2, zsteps)),
+        x: Math.floor(x / 2 ** zsteps),
+        y: Math.floor(y / 2 ** zsteps),
         z: dataMaxZoom
       };
     }
-
-    var tileUrl = replace(url, _extends({}, coords, params), sqlParams);
-
-    return new Promise(function (resolve, reject) {
+    const tileUrl = replace(url, _objectSpread2(_objectSpread2({}, coords), params), sqlParams);
+    return new Promise((resolve, reject) => {
       // Return cached tile if loaded.
-      if (_this2.tiles[id]) {
-        resolve(_this2.tiles[id].image);
+      if (this.tiles[id]) {
+        resolve(this.tiles[id].image);
       }
-
-      var xhr = new XMLHttpRequest();
-
-      xhr.addEventListener('load', function (e) {
-        var response = e.currentTarget.response;
-
-        var src = URL.createObjectURL(response);
-        var image = new Image();
-
+      const xhr = new XMLHttpRequest();
+      xhr.addEventListener('load', e => {
+        const {
+          response
+        } = e.currentTarget;
+        const src = URL.createObjectURL(response);
+        const image = new Image();
         image.src = src;
-
-        image.onload = function () {
+        image.onload = () => {
           image.crossOrigin = '';
           resolve(image);
           URL.revokeObjectURL(src);
         };
-
-        image.onerror = function () {
+        image.onerror = () => {
           reject(new Error("Can't load image"));
         };
       });
-
       xhr.addEventListener('error', reject);
-
       xhr.open('GET', tileUrl, true);
       xhr.responseType = 'blob';
       xhr.send();
     });
   },
-  cacheTile: function cacheTile(tile) {
-    this.tiles[tile.id] = _extends({}, this.tiles[tile.id], tile);
+  cacheTile(tile) {
+    this.tiles[tile.id] = _objectSpread2(_objectSpread2({}, this.tiles[tile.id]), tile);
   },
-  drawCanvas: function drawCanvas(id) {
+  drawCanvas(id) {
     'use asm';
 
     if (!this.tiles[id]) {
       return;
     }
-
-    var _tiles$id = this.tiles[id],
-        tile = _tiles$id.tile,
-        ctx = _tiles$id.ctx,
-        image = _tiles$id.image,
-        x = _tiles$id.x,
-        y = _tiles$id.y,
-        z = _tiles$id.z;
-
-
+    const {
+      tile,
+      ctx,
+      image,
+      x,
+      y,
+      z
+    } = this.tiles[id];
     if (!tile || !ctx || !image || typeof x === 'undefined' || typeof y === 'undefined' || typeof z === 'undefined') {
       delete this.tiles[id];
       return;
     }
-
-    var _options2 = this.options,
-        params = _options2.params,
-        decodeParams = _options2.decodeParams,
-        decodeFunction = _options2.decodeFunction;
-    var _params$dataMaxZoom2 = params.dataMaxZoom,
-        dataMaxZoom = _params$dataMaxZoom2 === undefined ? 20 : _params$dataMaxZoom2;
-
-    var zsteps = z - dataMaxZoom;
+    const {
+      params,
+      decodeParams,
+      decodeFunction
+    } = this.options;
+    const {
+      dataMaxZoom = 20
+    } = params;
+    const zsteps = z - dataMaxZoom;
 
     // this will allow us to sum up the dots when the timeline is running
     ctx.clearRect(0, 0, tile.width, tile.width);
-
     if (zsteps < 0) {
       ctx.drawImage(image, 0, 0);
     } else {
@@ -872,904 +740,1019 @@ var CanvasLayer = L$1 && L$1.GridLayer.extend({
       ctx.mozImageSmoothingEnabled = false;
 
       // tile scaling
-      var srcX = tile.width / Math.pow(2, zsteps) * (x % Math.pow(2, zsteps)) || 0;
-      var srcY = tile.height / Math.pow(2, zsteps) * (y % Math.pow(2, zsteps)) || 0;
-      var srcW = tile.width / Math.pow(2, zsteps) || 0;
-      var srcH = tile.height / Math.pow(2, zsteps) || 0;
-
+      const srcX = tile.width / 2 ** zsteps * (x % 2 ** zsteps) || 0;
+      const srcY = tile.height / 2 ** zsteps * (y % 2 ** zsteps) || 0;
+      const srcW = tile.width / 2 ** zsteps || 0;
+      const srcH = tile.height / 2 ** zsteps || 0;
       ctx.drawImage(image, srcX, srcY, srcW, srcH, 0, 0, tile.width, tile.height);
     }
-
-    var I = ctx.getImageData(0, 0, tile.width, tile.height);
-
+    const I = ctx.getImageData(0, 0, tile.width, tile.height);
     if (typeof decodeFunction === 'function') {
       decodeFunction(I.data, tile.width, tile.height, z, decodeParams);
     }
-
     ctx.putImageData(I, 0, 0);
   },
-  reDraw: function reDraw(options) {
-    var _this3 = this;
-
+  reDraw(options) {
     this.options.params = options.params;
     this.options.sqlParams = options.sqlParams;
     this.options.decodeParams = options.decodeParams;
-
-    var params = options.params,
-        sqlParams = options.sqlParams;
-
-
+    const {
+      params,
+      sqlParams
+    } = options;
     if (params && params.url) {
-      Object.keys(this.tiles).map(function (k) {
-        var _tiles$k = _this3.tiles[k],
-            x = _tiles$k.x,
-            y = _tiles$k.y,
-            z = _tiles$k.z;
-
-        var id = replace(params.url, _extends({ x: x, y: y, z: z }, params, { sqlParams: sqlParams }));
-
-        return _this3.drawCanvas(id);
+      Object.keys(this.tiles).map(k => {
+        const {
+          x,
+          y,
+          z
+        } = this.tiles[k];
+        const id = replace(params.url, _objectSpread2(_objectSpread2({
+          x,
+          y,
+          z
+        }, params), {}, {
+          sqlParams
+        }));
+        return this.drawCanvas(id);
       });
     }
   }
 });
 
 // Symbol to indicate a canceled request
-var CANCELED$1 = Symbol('CANCELED');
-
-var fetchData = function fetchData(layerModel) {
-  var layerConfig = layerModel.layerConfig,
-      layerRequest = layerModel.layerRequest;
-  var url = layerConfig.body.url;
-
-
+const CANCELED = Symbol('CANCELED');
+const fetchData = layerModel => {
+  const {
+    layerConfig,
+    layerRequest
+  } = layerModel;
+  const {
+    url
+  } = layerConfig.body;
   if (layerRequest) {
     layerRequest.cancel('Operation canceled by the user.');
   }
-
-  var layerRequestSource = CancelToken.source();
+  const layerRequestSource = CancelToken.source();
   layerModel.set('layerRequest', layerRequestSource);
-
-  var newLayerRequest = get$1(url, { cancelToken: layerRequestSource.token }).then(function (res) {
+  const newLayerRequest = get(url, {
+    cancelToken: layerRequestSource.token
+  }).then(res => {
     if (res.status > 400) {
       console.error(res);
       return false;
     }
-
     return res.data;
-  }).catch(function (err) {
+  }).catch(err => {
     // Silently handle canceled requests - return CANCELED symbol instead of rejecting
     if (axios.isCancel(err)) {
-      return CANCELED$1;
+      return CANCELED;
     }
     throw err;
   });
-
   return newLayerRequest;
 };
 
-function sortKD(ids, coords, nodeSize, left, right, depth) {
-    if (right - left <= nodeSize) return;
+const ARRAY_TYPES = [Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array];
 
-    var m = Math.floor((left + right) / 2);
+/** @typedef {Int8ArrayConstructor | Uint8ArrayConstructor | Uint8ClampedArrayConstructor | Int16ArrayConstructor | Uint16ArrayConstructor | Int32ArrayConstructor | Uint32ArrayConstructor | Float32ArrayConstructor | Float64ArrayConstructor} TypedArrayConstructor */
 
-    select(ids, coords, m, left, right, depth % 2);
-
-    sortKD(ids, coords, nodeSize, left, m - 1, depth + 1);
-    sortKD(ids, coords, nodeSize, m + 1, right, depth + 1);
-}
-
-function select(ids, coords, k, left, right, inc) {
-
-    while (right > left) {
-        if (right - left > 600) {
-            var n = right - left + 1;
-            var m = k - left + 1;
-            var z = Math.log(n);
-            var s = 0.5 * Math.exp(2 * z / 3);
-            var sd = 0.5 * Math.sqrt(z * s * (n - s) / n) * (m - n / 2 < 0 ? -1 : 1);
-            var newLeft = Math.max(left, Math.floor(k - m * s / n + sd));
-            var newRight = Math.min(right, Math.floor(k + (n - m) * s / n + sd));
-            select(ids, coords, k, newLeft, newRight, inc);
-        }
-
-        var t = coords[2 * k + inc];
-        var i = left;
-        var j = right;
-
-        swapItem(ids, coords, left, k);
-        if (coords[2 * right + inc] > t) swapItem(ids, coords, left, right);
-
-        while (i < j) {
-            swapItem(ids, coords, i, j);
-            i++;
-            j--;
-            while (coords[2 * i + inc] < t) {
-                i++;
-            }while (coords[2 * j + inc] > t) {
-                j--;
-            }
-        }
-
-        if (coords[2 * left + inc] === t) swapItem(ids, coords, left, j);else {
-            j++;
-            swapItem(ids, coords, j, right);
-        }
-
-        if (j <= k) left = j + 1;
-        if (k <= j) right = j - 1;
+const VERSION = 1; // serialized format version
+const HEADER_SIZE = 8;
+class KDBush {
+  /**
+   * Creates an index from raw `ArrayBuffer` data.
+   * @param {ArrayBuffer} data
+   */
+  static from(data) {
+    if (!(data instanceof ArrayBuffer)) {
+      throw new Error('Data must be an instance of ArrayBuffer.');
     }
+    const [magic, versionAndType] = new Uint8Array(data, 0, 2);
+    if (magic !== 0xdb) {
+      throw new Error('Data does not appear to be in a KDBush format.');
+    }
+    const version = versionAndType >> 4;
+    if (version !== VERSION) {
+      throw new Error(`Got v${version} data when expected v${VERSION}.`);
+    }
+    const ArrayType = ARRAY_TYPES[versionAndType & 0x0f];
+    if (!ArrayType) {
+      throw new Error('Unrecognized array type.');
+    }
+    const [nodeSize] = new Uint16Array(data, 2, 1);
+    const [numItems] = new Uint32Array(data, 4, 1);
+    return new KDBush(numItems, nodeSize, ArrayType, data);
+  }
+
+  /**
+   * Creates an index that will hold a given number of items.
+   * @param {number} numItems
+   * @param {number} [nodeSize=64] Size of the KD-tree node (64 by default).
+   * @param {TypedArrayConstructor} [ArrayType=Float64Array] The array type used for coordinates storage (`Float64Array` by default).
+   * @param {ArrayBuffer} [data] (For internal use only)
+   */
+  constructor(numItems, nodeSize = 64, ArrayType = Float64Array, data) {
+    if (isNaN(numItems) || numItems < 0) throw new Error(`Unpexpected numItems value: ${numItems}.`);
+    this.numItems = +numItems;
+    this.nodeSize = Math.min(Math.max(+nodeSize, 2), 65535);
+    this.ArrayType = ArrayType;
+    this.IndexArrayType = numItems < 65536 ? Uint16Array : Uint32Array;
+    const arrayTypeIndex = ARRAY_TYPES.indexOf(this.ArrayType);
+    const coordsByteSize = numItems * 2 * this.ArrayType.BYTES_PER_ELEMENT;
+    const idsByteSize = numItems * this.IndexArrayType.BYTES_PER_ELEMENT;
+    const padCoords = (8 - idsByteSize % 8) % 8;
+    if (arrayTypeIndex < 0) {
+      throw new Error(`Unexpected typed array class: ${ArrayType}.`);
+    }
+    if (data && data instanceof ArrayBuffer) {
+      // reconstruct an index from a buffer
+      this.data = data;
+      this.ids = new this.IndexArrayType(this.data, HEADER_SIZE, numItems);
+      this.coords = new this.ArrayType(this.data, HEADER_SIZE + idsByteSize + padCoords, numItems * 2);
+      this._pos = numItems * 2;
+      this._finished = true;
+    } else {
+      // initialize a new index
+      this.data = new ArrayBuffer(HEADER_SIZE + coordsByteSize + idsByteSize + padCoords);
+      this.ids = new this.IndexArrayType(this.data, HEADER_SIZE, numItems);
+      this.coords = new this.ArrayType(this.data, HEADER_SIZE + idsByteSize + padCoords, numItems * 2);
+      this._pos = 0;
+      this._finished = false;
+
+      // set header
+      new Uint8Array(this.data, 0, 2).set([0xdb, (VERSION << 4) + arrayTypeIndex]);
+      new Uint16Array(this.data, 2, 1)[0] = nodeSize;
+      new Uint32Array(this.data, 4, 1)[0] = numItems;
+    }
+  }
+
+  /**
+   * Add a point to the index.
+   * @param {number} x
+   * @param {number} y
+   * @returns {number} An incremental index associated with the added item (starting from `0`).
+   */
+  add(x, y) {
+    const index = this._pos >> 1;
+    this.ids[index] = index;
+    this.coords[this._pos++] = x;
+    this.coords[this._pos++] = y;
+    return index;
+  }
+
+  /**
+   * Perform indexing of the added points.
+   */
+  finish() {
+    const numAdded = this._pos >> 1;
+    if (numAdded !== this.numItems) {
+      throw new Error(`Added ${numAdded} items when expected ${this.numItems}.`);
+    }
+    // kd-sort both arrays for efficient search
+    sort(this.ids, this.coords, this.nodeSize, 0, this.numItems - 1, 0);
+    this._finished = true;
+    return this;
+  }
+
+  /**
+   * Search the index for items within a given bounding box.
+   * @param {number} minX
+   * @param {number} minY
+   * @param {number} maxX
+   * @param {number} maxY
+   * @returns {number[]} An array of indices correponding to the found items.
+   */
+  range(minX, minY, maxX, maxY) {
+    if (!this._finished) throw new Error('Data not yet indexed - call index.finish().');
+    const {
+      ids,
+      coords,
+      nodeSize
+    } = this;
+    const stack = [0, ids.length - 1, 0];
+    const result = [];
+
+    // recursively search for items in range in the kd-sorted arrays
+    while (stack.length) {
+      const axis = stack.pop() || 0;
+      const right = stack.pop() || 0;
+      const left = stack.pop() || 0;
+
+      // if we reached "tree node", search linearly
+      if (right - left <= nodeSize) {
+        for (let i = left; i <= right; i++) {
+          const x = coords[2 * i];
+          const y = coords[2 * i + 1];
+          if (x >= minX && x <= maxX && y >= minY && y <= maxY) result.push(ids[i]);
+        }
+        continue;
+      }
+
+      // otherwise find the middle index
+      const m = left + right >> 1;
+
+      // include the middle item if it's in range
+      const x = coords[2 * m];
+      const y = coords[2 * m + 1];
+      if (x >= minX && x <= maxX && y >= minY && y <= maxY) result.push(ids[m]);
+
+      // queue search in halves that intersect the query
+      if (axis === 0 ? minX <= x : minY <= y) {
+        stack.push(left);
+        stack.push(m - 1);
+        stack.push(1 - axis);
+      }
+      if (axis === 0 ? maxX >= x : maxY >= y) {
+        stack.push(m + 1);
+        stack.push(right);
+        stack.push(1 - axis);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Search the index for items within a given radius.
+   * @param {number} qx
+   * @param {number} qy
+   * @param {number} r Query radius.
+   * @returns {number[]} An array of indices correponding to the found items.
+   */
+  within(qx, qy, r) {
+    if (!this._finished) throw new Error('Data not yet indexed - call index.finish().');
+    const {
+      ids,
+      coords,
+      nodeSize
+    } = this;
+    const stack = [0, ids.length - 1, 0];
+    const result = [];
+    const r2 = r * r;
+
+    // recursively search for items within radius in the kd-sorted arrays
+    while (stack.length) {
+      const axis = stack.pop() || 0;
+      const right = stack.pop() || 0;
+      const left = stack.pop() || 0;
+
+      // if we reached "tree node", search linearly
+      if (right - left <= nodeSize) {
+        for (let i = left; i <= right; i++) {
+          if (sqDist(coords[2 * i], coords[2 * i + 1], qx, qy) <= r2) result.push(ids[i]);
+        }
+        continue;
+      }
+
+      // otherwise find the middle index
+      const m = left + right >> 1;
+
+      // include the middle item if it's in range
+      const x = coords[2 * m];
+      const y = coords[2 * m + 1];
+      if (sqDist(x, y, qx, qy) <= r2) result.push(ids[m]);
+
+      // queue search in halves that intersect the query
+      if (axis === 0 ? qx - r <= x : qy - r <= y) {
+        stack.push(left);
+        stack.push(m - 1);
+        stack.push(1 - axis);
+      }
+      if (axis === 0 ? qx + r >= x : qy + r >= y) {
+        stack.push(m + 1);
+        stack.push(right);
+        stack.push(1 - axis);
+      }
+    }
+    return result;
+  }
 }
 
+/**
+ * @param {Uint16Array | Uint32Array} ids
+ * @param {InstanceType<TypedArrayConstructor>} coords
+ * @param {number} nodeSize
+ * @param {number} left
+ * @param {number} right
+ * @param {number} axis
+ */
+function sort(ids, coords, nodeSize, left, right, axis) {
+  if (right - left <= nodeSize) return;
+  const m = left + right >> 1; // middle index
+
+  // sort ids and coords around the middle index so that the halves lie
+  // either left/right or top/bottom correspondingly (taking turns)
+  select(ids, coords, m, left, right, axis);
+
+  // recursively kd-sort first half and second half on the opposite axis
+  sort(ids, coords, nodeSize, left, m - 1, 1 - axis);
+  sort(ids, coords, nodeSize, m + 1, right, 1 - axis);
+}
+
+/**
+ * Custom Floyd-Rivest selection algorithm: sort ids and coords so that
+ * [left..k-1] items are smaller than k-th item (on either x or y axis)
+ * @param {Uint16Array | Uint32Array} ids
+ * @param {InstanceType<TypedArrayConstructor>} coords
+ * @param {number} k
+ * @param {number} left
+ * @param {number} right
+ * @param {number} axis
+ */
+function select(ids, coords, k, left, right, axis) {
+  while (right > left) {
+    if (right - left > 600) {
+      const n = right - left + 1;
+      const m = k - left + 1;
+      const z = Math.log(n);
+      const s = 0.5 * Math.exp(2 * z / 3);
+      const sd = 0.5 * Math.sqrt(z * s * (n - s) / n) * (m - n / 2 < 0 ? -1 : 1);
+      const newLeft = Math.max(left, Math.floor(k - m * s / n + sd));
+      const newRight = Math.min(right, Math.floor(k + (n - m) * s / n + sd));
+      select(ids, coords, k, newLeft, newRight, axis);
+    }
+    const t = coords[2 * k + axis];
+    let i = left;
+    let j = right;
+    swapItem(ids, coords, left, k);
+    if (coords[2 * right + axis] > t) swapItem(ids, coords, left, right);
+    while (i < j) {
+      swapItem(ids, coords, i, j);
+      i++;
+      j--;
+      while (coords[2 * i + axis] < t) i++;
+      while (coords[2 * j + axis] > t) j--;
+    }
+    if (coords[2 * left + axis] === t) swapItem(ids, coords, left, j);else {
+      j++;
+      swapItem(ids, coords, j, right);
+    }
+    if (j <= k) left = j + 1;
+    if (k <= j) right = j - 1;
+  }
+}
+
+/**
+ * @param {Uint16Array | Uint32Array} ids
+ * @param {InstanceType<TypedArrayConstructor>} coords
+ * @param {number} i
+ * @param {number} j
+ */
 function swapItem(ids, coords, i, j) {
-    swap(ids, i, j);
-    swap(coords, 2 * i, 2 * j);
-    swap(coords, 2 * i + 1, 2 * j + 1);
+  swap(ids, i, j);
+  swap(coords, 2 * i, 2 * j);
+  swap(coords, 2 * i + 1, 2 * j + 1);
 }
 
+/**
+ * @param {InstanceType<TypedArrayConstructor>} arr
+ * @param {number} i
+ * @param {number} j
+ */
 function swap(arr, i, j) {
-    var tmp = arr[i];
-    arr[i] = arr[j];
-    arr[j] = tmp;
+  const tmp = arr[i];
+  arr[i] = arr[j];
+  arr[j] = tmp;
 }
 
-function range(ids, coords, minX, minY, maxX, maxY, nodeSize) {
-    var stack = [0, ids.length - 1, 0];
-    var result = [];
-    var x, y;
-
-    while (stack.length) {
-        var axis = stack.pop();
-        var right = stack.pop();
-        var left = stack.pop();
-
-        if (right - left <= nodeSize) {
-            for (var i = left; i <= right; i++) {
-                x = coords[2 * i];
-                y = coords[2 * i + 1];
-                if (x >= minX && x <= maxX && y >= minY && y <= maxY) result.push(ids[i]);
-            }
-            continue;
-        }
-
-        var m = Math.floor((left + right) / 2);
-
-        x = coords[2 * m];
-        y = coords[2 * m + 1];
-
-        if (x >= minX && x <= maxX && y >= minY && y <= maxY) result.push(ids[m]);
-
-        var nextAxis = (axis + 1) % 2;
-
-        if (axis === 0 ? minX <= x : minY <= y) {
-            stack.push(left);
-            stack.push(m - 1);
-            stack.push(nextAxis);
-        }
-        if (axis === 0 ? maxX >= x : maxY >= y) {
-            stack.push(m + 1);
-            stack.push(right);
-            stack.push(nextAxis);
-        }
-    }
-
-    return result;
-}
-
-function within(ids, coords, qx, qy, r, nodeSize) {
-    var stack = [0, ids.length - 1, 0];
-    var result = [];
-    var r2 = r * r;
-
-    while (stack.length) {
-        var axis = stack.pop();
-        var right = stack.pop();
-        var left = stack.pop();
-
-        if (right - left <= nodeSize) {
-            for (var i = left; i <= right; i++) {
-                if (sqDist(coords[2 * i], coords[2 * i + 1], qx, qy) <= r2) result.push(ids[i]);
-            }
-            continue;
-        }
-
-        var m = Math.floor((left + right) / 2);
-
-        var x = coords[2 * m];
-        var y = coords[2 * m + 1];
-
-        if (sqDist(x, y, qx, qy) <= r2) result.push(ids[m]);
-
-        var nextAxis = (axis + 1) % 2;
-
-        if (axis === 0 ? qx - r <= x : qy - r <= y) {
-            stack.push(left);
-            stack.push(m - 1);
-            stack.push(nextAxis);
-        }
-        if (axis === 0 ? qx + r >= x : qy + r >= y) {
-            stack.push(m + 1);
-            stack.push(right);
-            stack.push(nextAxis);
-        }
-    }
-
-    return result;
-}
-
+/**
+ * @param {number} ax
+ * @param {number} ay
+ * @param {number} bx
+ * @param {number} by
+ */
 function sqDist(ax, ay, bx, by) {
-    var dx = ax - bx;
-    var dy = ay - by;
-    return dx * dx + dy * dy;
+  const dx = ax - bx;
+  const dy = ay - by;
+  return dx * dx + dy * dy;
 }
 
-function kdbush(points, getX, getY, nodeSize, ArrayType) {
-    return new KDBush(points, getX, getY, nodeSize, ArrayType);
-}
+const defaultOptions = {
+  minZoom: 0,
+  // min zoom to generate clusters on
+  maxZoom: 16,
+  // max zoom level to cluster the points on
+  minPoints: 2,
+  // minimum points to form a cluster
+  radius: 40,
+  // cluster radius in pixels
+  extent: 512,
+  // tile extent (radius is calculated relative to it)
+  nodeSize: 64,
+  // size of the KD-tree leaf node, affects performance
+  log: false,
+  // whether to log timing info
 
-function KDBush(points, getX, getY, nodeSize, ArrayType) {
-    getX = getX || defaultGetX;
-    getY = getY || defaultGetY;
-    ArrayType = ArrayType || Array;
+  // whether to generate numeric ids for input features (in vector tiles)
+  generateId: false,
+  // a reduce function for calculating custom cluster properties
+  reduce: null,
+  // (accumulated, props) => { accumulated.sum += props.sum; }
 
-    this.nodeSize = nodeSize || 64;
+  // properties to use for individual points when running the reducer
+  map: props => props // props => ({sum: props.my_value})
+};
+const fround = Math.fround || (tmp => x => {
+  tmp[0] = +x;
+  return tmp[0];
+})(new Float32Array(1));
+const OFFSET_ZOOM = 2;
+const OFFSET_ID = 3;
+const OFFSET_PARENT = 4;
+const OFFSET_NUM = 5;
+const OFFSET_PROP = 6;
+class Supercluster {
+  constructor(options) {
+    this.options = Object.assign(Object.create(defaultOptions), options);
+    this.trees = new Array(this.options.maxZoom + 1);
+    this.stride = this.options.reduce ? 7 : 6;
+    this.clusterProps = [];
+  }
+  load(points) {
+    const {
+      log,
+      minZoom,
+      maxZoom
+    } = this.options;
+    if (log) console.time('total time');
+    const timerId = `prepare ${points.length} points`;
+    if (log) console.time(timerId);
     this.points = points;
 
-    this.ids = new ArrayType(points.length);
-    this.coords = new ArrayType(points.length * 2);
-
-    for (var i = 0; i < points.length; i++) {
-        this.ids[i] = i;
-        this.coords[2 * i] = getX(points[i]);
-        this.coords[2 * i + 1] = getY(points[i]);
+    // generate a cluster object for each point and index input points into a KD-tree
+    const data = [];
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      if (!p.geometry) continue;
+      const [lng, lat] = p.geometry.coordinates;
+      const x = fround(lngX(lng));
+      const y = fround(latY(lat));
+      // store internal point/cluster data in flat numeric arrays for performance
+      data.push(x, y,
+      // projected point coordinates
+      Infinity,
+      // the last zoom the point was processed at
+      i,
+      // index of the source feature in the original input array
+      -1,
+      // parent cluster id
+      1 // number of points in a cluster
+      );
+      if (this.options.reduce) data.push(0); // noop
     }
+    let tree = this.trees[maxZoom + 1] = this._createTree(data);
+    if (log) console.timeEnd(timerId);
 
-    sortKD(this.ids, this.coords, this.nodeSize, 0, this.ids.length - 1, 0);
-}
+    // cluster points on max zoom, then cluster the results on previous zoom, etc.;
+    // results in a cluster hierarchy across zoom levels
+    for (let z = maxZoom; z >= minZoom; z--) {
+      const now = +Date.now();
 
-KDBush.prototype = {
-    range: function range$$1(minX, minY, maxX, maxY) {
-        return range(this.ids, this.coords, minX, minY, maxX, maxY, this.nodeSize);
-    },
-
-    within: function within$$1(x, y, r) {
-        return within(this.ids, this.coords, x, y, r, this.nodeSize);
+      // create a new set of clusters for the zoom and index them with a KD-tree
+      tree = this.trees[z] = this._createTree(this._cluster(tree, z));
+      if (log) console.log('z%d: %d clusters in %dms', z, tree.numItems, +Date.now() - now);
     }
-};
-
-function defaultGetX(p) {
-    return p[0];
-}
-function defaultGetY(p) {
-    return p[1];
-}
-
-function supercluster(options) {
-    return new SuperCluster(options);
-}
-
-function SuperCluster(options) {
-    this.options = extend(Object.create(this.options), options);
-    this.trees = new Array(this.options.maxZoom + 1);
-}
-
-SuperCluster.prototype = {
-    options: {
-        minZoom: 0, // min zoom to generate clusters on
-        maxZoom: 16, // max zoom level to cluster the points on
-        radius: 40, // cluster radius in pixels
-        extent: 512, // tile extent (radius is calculated relative to it)
-        nodeSize: 64, // size of the KD-tree leaf node, affects performance
-        log: false, // whether to log timing info
-
-        // a reduce function for calculating custom cluster properties
-        reduce: null, // function (accumulated, props) { accumulated.sum += props.sum; }
-
-        // initial properties of a cluster (before running the reducer)
-        initial: function initial() {
-            return {};
-        }, // function () { return {sum: 0}; },
-
-        // properties to use for individual points when running the reducer
-        map: function map(props) {
-            return props;
-        } // function (props) { return {sum: props.my_value}; },
-    },
-
-    load: function load(points) {
-        var log = this.options.log;
-
-        if (log) console.time('total time');
-
-        var timerId = 'prepare ' + points.length + ' points';
-        if (log) console.time(timerId);
-
-        this.points = points;
-
-        // generate a cluster object for each point and index input points into a KD-tree
-        var clusters = [];
-        for (var i = 0; i < points.length; i++) {
-            if (!points[i].geometry) {
-                continue;
-            }
-            clusters.push(createPointCluster(points[i], i));
-        }
-        this.trees[this.options.maxZoom + 1] = kdbush(clusters, getX, getY, this.options.nodeSize, Float32Array);
-
-        if (log) console.timeEnd(timerId);
-
-        // cluster points on max zoom, then cluster the results on previous zoom, etc.;
-        // results in a cluster hierarchy across zoom levels
-        for (var z = this.options.maxZoom; z >= this.options.minZoom; z--) {
-            var now = +Date.now();
-
-            // create a new set of clusters for the zoom and index them with a KD-tree
-            clusters = this._cluster(clusters, z);
-            this.trees[z] = kdbush(clusters, getX, getY, this.options.nodeSize, Float32Array);
-
-            if (log) console.log('z%d: %d clusters in %dms', z, clusters.length, +Date.now() - now);
-        }
-
-        if (log) console.timeEnd('total time');
-
-        return this;
-    },
-
-    getClusters: function getClusters(bbox, zoom) {
-        var minLng = ((bbox[0] + 180) % 360 + 360) % 360 - 180;
-        var minLat = Math.max(-90, Math.min(90, bbox[1]));
-        var maxLng = bbox[2] === 180 ? 180 : ((bbox[2] + 180) % 360 + 360) % 360 - 180;
-        var maxLat = Math.max(-90, Math.min(90, bbox[3]));
-
-        if (bbox[2] - bbox[0] >= 360) {
-            minLng = -180;
-            maxLng = 180;
-        } else if (minLng > maxLng) {
-            var easternHem = this.getClusters([minLng, minLat, 180, maxLat], zoom);
-            var westernHem = this.getClusters([-180, minLat, maxLng, maxLat], zoom);
-            return easternHem.concat(westernHem);
-        }
-
-        var tree = this.trees[this._limitZoom(zoom)];
-        var ids = tree.range(lngX(minLng), latY(maxLat), lngX(maxLng), latY(minLat));
-        var clusters = [];
-        for (var i = 0; i < ids.length; i++) {
-            var c = tree.points[ids[i]];
-            clusters.push(c.numPoints ? getClusterJSON(c) : this.points[c.index]);
-        }
-        return clusters;
-    },
-
-    getChildren: function getChildren(clusterId) {
-        var originId = clusterId >> 5;
-        var originZoom = clusterId % 32;
-        var errorMsg = 'No cluster with the specified id.';
-
-        var index = this.trees[originZoom];
-        if (!index) throw new Error(errorMsg);
-
-        var origin = index.points[originId];
-        if (!origin) throw new Error(errorMsg);
-
-        var r = this.options.radius / (this.options.extent * Math.pow(2, originZoom - 1));
-        var ids = index.within(origin.x, origin.y, r);
-        var children = [];
-        for (var i = 0; i < ids.length; i++) {
-            var c = index.points[ids[i]];
-            if (c.parentId === clusterId) {
-                children.push(c.numPoints ? getClusterJSON(c) : this.points[c.index]);
-            }
-        }
-
-        if (children.length === 0) throw new Error(errorMsg);
-
-        return children;
-    },
-
-    getLeaves: function getLeaves(clusterId, limit, offset) {
-        limit = limit || 10;
-        offset = offset || 0;
-
-        var leaves = [];
-        this._appendLeaves(leaves, clusterId, limit, offset, 0);
-
-        return leaves;
-    },
-
-    getTile: function getTile(z, x, y) {
-        var tree = this.trees[this._limitZoom(z)];
-        var z2 = Math.pow(2, z);
-        var extent = this.options.extent;
-        var r = this.options.radius;
-        var p = r / extent;
-        var top = (y - p) / z2;
-        var bottom = (y + 1 + p) / z2;
-
-        var tile = {
-            features: []
-        };
-
-        this._addTileFeatures(tree.range((x - p) / z2, top, (x + 1 + p) / z2, bottom), tree.points, x, y, z2, tile);
-
-        if (x === 0) {
-            this._addTileFeatures(tree.range(1 - p / z2, top, 1, bottom), tree.points, z2, y, z2, tile);
-        }
-        if (x === z2 - 1) {
-            this._addTileFeatures(tree.range(0, top, p / z2, bottom), tree.points, -1, y, z2, tile);
-        }
-
-        return tile.features.length ? tile : null;
-    },
-
-    getClusterExpansionZoom: function getClusterExpansionZoom(clusterId) {
-        var clusterZoom = clusterId % 32 - 1;
-        while (clusterZoom < this.options.maxZoom) {
-            var children = this.getChildren(clusterId);
-            clusterZoom++;
-            if (children.length !== 1) break;
-            clusterId = children[0].properties.cluster_id;
-        }
-        return clusterZoom;
-    },
-
-    _appendLeaves: function _appendLeaves(result, clusterId, limit, offset, skipped) {
-        var children = this.getChildren(clusterId);
-
-        for (var i = 0; i < children.length; i++) {
-            var props = children[i].properties;
-
-            if (props && props.cluster) {
-                if (skipped + props.point_count <= offset) {
-                    // skip the whole cluster
-                    skipped += props.point_count;
-                } else {
-                    // enter the cluster
-                    skipped = this._appendLeaves(result, props.cluster_id, limit, offset, skipped);
-                    // exit the cluster
-                }
-            } else if (skipped < offset) {
-                // skip a single point
-                skipped++;
-            } else {
-                // add a single point
-                result.push(children[i]);
-            }
-            if (result.length === limit) break;
-        }
-
-        return skipped;
-    },
-
-    _addTileFeatures: function _addTileFeatures(ids, points, x, y, z2, tile) {
-        for (var i = 0; i < ids.length; i++) {
-            var c = points[ids[i]];
-            var f = {
-                type: 1,
-                geometry: [[Math.round(this.options.extent * (c.x * z2 - x)), Math.round(this.options.extent * (c.y * z2 - y))]],
-                tags: c.numPoints ? getClusterProperties(c) : this.points[c.index].properties
-            };
-            var id = c.numPoints ? c.id : this.points[c.index].id;
-            if (id !== undefined) {
-                f.id = id;
-            }
-            tile.features.push(f);
-        }
-    },
-
-    _limitZoom: function _limitZoom(z) {
-        return Math.max(this.options.minZoom, Math.min(z, this.options.maxZoom + 1));
-    },
-
-    _cluster: function _cluster(points, zoom) {
-        var clusters = [];
-        var r = this.options.radius / (this.options.extent * Math.pow(2, zoom));
-
-        // loop through each point
-        for (var i = 0; i < points.length; i++) {
-            var p = points[i];
-            // if we've already visited the point at this zoom level, skip it
-            if (p.zoom <= zoom) continue;
-            p.zoom = zoom;
-
-            // find all nearby points
-            var tree = this.trees[zoom + 1];
-            var neighborIds = tree.within(p.x, p.y, r);
-
-            var numPoints = p.numPoints || 1;
-            var wx = p.x * numPoints;
-            var wy = p.y * numPoints;
-
-            var clusterProperties = null;
-
-            if (this.options.reduce) {
-                clusterProperties = this.options.initial();
-                this._accumulate(clusterProperties, p);
-            }
-
-            // encode both zoom and point index on which the cluster originated
-            var id = (i << 5) + (zoom + 1);
-
-            for (var j = 0; j < neighborIds.length; j++) {
-                var b = tree.points[neighborIds[j]];
-                // filter out neighbors that are already processed
-                if (b.zoom <= zoom) continue;
-                b.zoom = zoom; // save the zoom (so it doesn't get processed twice)
-
-                var numPoints2 = b.numPoints || 1;
-                wx += b.x * numPoints2; // accumulate coordinates for calculating weighted center
-                wy += b.y * numPoints2;
-
-                numPoints += numPoints2;
-                b.parentId = id;
-
-                if (this.options.reduce) {
-                    this._accumulate(clusterProperties, b);
-                }
-            }
-
-            if (numPoints === 1) {
-                clusters.push(p);
-            } else {
-                p.parentId = id;
-                clusters.push(createCluster(wx / numPoints, wy / numPoints, id, numPoints, clusterProperties));
-            }
-        }
-
-        return clusters;
-    },
-
-    _accumulate: function _accumulate(clusterProperties, point) {
-        var properties = point.numPoints ? point.properties : this.options.map(this.points[point.index].properties);
-
-        this.options.reduce(clusterProperties, properties);
+    if (log) console.timeEnd('total time');
+    return this;
+  }
+  getClusters(bbox, zoom) {
+    let minLng = ((bbox[0] + 180) % 360 + 360) % 360 - 180;
+    const minLat = Math.max(-90, Math.min(90, bbox[1]));
+    let maxLng = bbox[2] === 180 ? 180 : ((bbox[2] + 180) % 360 + 360) % 360 - 180;
+    const maxLat = Math.max(-90, Math.min(90, bbox[3]));
+    if (bbox[2] - bbox[0] >= 360) {
+      minLng = -180;
+      maxLng = 180;
+    } else if (minLng > maxLng) {
+      const easternHem = this.getClusters([minLng, minLat, 180, maxLat], zoom);
+      const westernHem = this.getClusters([-180, minLat, maxLng, maxLat], zoom);
+      return easternHem.concat(westernHem);
     }
-};
-
-function createCluster(x, y, id, numPoints, properties) {
-    return {
-        x: x, // weighted cluster center
-        y: y,
-        zoom: Infinity, // the last zoom the cluster was processed at
-        id: id, // encodes index of the first child of the cluster and its zoom level
-        parentId: -1, // parent cluster id
-        numPoints: numPoints,
-        properties: properties
+    const tree = this.trees[this._limitZoom(zoom)];
+    const ids = tree.range(lngX(minLng), latY(maxLat), lngX(maxLng), latY(minLat));
+    const data = tree.data;
+    const clusters = [];
+    for (const id of ids) {
+      const k = this.stride * id;
+      clusters.push(data[k + OFFSET_NUM] > 1 ? getClusterJSON(data, k, this.clusterProps) : this.points[data[k + OFFSET_ID]]);
+    }
+    return clusters;
+  }
+  getChildren(clusterId) {
+    const originId = this._getOriginId(clusterId);
+    const originZoom = this._getOriginZoom(clusterId);
+    const errorMsg = 'No cluster with the specified id.';
+    const tree = this.trees[originZoom];
+    if (!tree) throw new Error(errorMsg);
+    const data = tree.data;
+    if (originId * this.stride >= data.length) throw new Error(errorMsg);
+    const r = this.options.radius / (this.options.extent * Math.pow(2, originZoom - 1));
+    const x = data[originId * this.stride];
+    const y = data[originId * this.stride + 1];
+    const ids = tree.within(x, y, r);
+    const children = [];
+    for (const id of ids) {
+      const k = id * this.stride;
+      if (data[k + OFFSET_PARENT] === clusterId) {
+        children.push(data[k + OFFSET_NUM] > 1 ? getClusterJSON(data, k, this.clusterProps) : this.points[data[k + OFFSET_ID]]);
+      }
+    }
+    if (children.length === 0) throw new Error(errorMsg);
+    return children;
+  }
+  getLeaves(clusterId, limit, offset) {
+    limit = limit || 10;
+    offset = offset || 0;
+    const leaves = [];
+    this._appendLeaves(leaves, clusterId, limit, offset, 0);
+    return leaves;
+  }
+  getTile(z, x, y) {
+    const tree = this.trees[this._limitZoom(z)];
+    const z2 = Math.pow(2, z);
+    const {
+      extent,
+      radius
+    } = this.options;
+    const p = radius / extent;
+    const top = (y - p) / z2;
+    const bottom = (y + 1 + p) / z2;
+    const tile = {
+      features: []
     };
-}
-
-function createPointCluster(p, id) {
-    var coords = p.geometry.coordinates;
-    return {
-        x: lngX(coords[0]), // projected point coordinates
-        y: latY(coords[1]),
-        zoom: Infinity, // the last zoom the point was processed at
-        index: id, // index of the source feature in the original input array,
-        parentId: -1 // parent cluster id
-    };
-}
-
-function getClusterJSON(cluster) {
-    return {
-        type: 'Feature',
-        id: cluster.id,
-        properties: getClusterProperties(cluster),
-        geometry: {
-            type: 'Point',
-            coordinates: [xLng(cluster.x), yLat(cluster.y)]
+    this._addTileFeatures(tree.range((x - p) / z2, top, (x + 1 + p) / z2, bottom), tree.data, x, y, z2, tile);
+    if (x === 0) {
+      this._addTileFeatures(tree.range(1 - p / z2, top, 1, bottom), tree.data, z2, y, z2, tile);
+    }
+    if (x === z2 - 1) {
+      this._addTileFeatures(tree.range(0, top, p / z2, bottom), tree.data, -1, y, z2, tile);
+    }
+    return tile.features.length ? tile : null;
+  }
+  getClusterExpansionZoom(clusterId) {
+    let expansionZoom = this._getOriginZoom(clusterId) - 1;
+    while (expansionZoom <= this.options.maxZoom) {
+      const children = this.getChildren(clusterId);
+      expansionZoom++;
+      if (children.length !== 1) break;
+      clusterId = children[0].properties.cluster_id;
+    }
+    return expansionZoom;
+  }
+  _appendLeaves(result, clusterId, limit, offset, skipped) {
+    const children = this.getChildren(clusterId);
+    for (const child of children) {
+      const props = child.properties;
+      if (props && props.cluster) {
+        if (skipped + props.point_count <= offset) {
+          // skip the whole cluster
+          skipped += props.point_count;
+        } else {
+          // enter the cluster
+          skipped = this._appendLeaves(result, props.cluster_id, limit, offset, skipped);
+          // exit the cluster
         }
-    };
-}
+      } else if (skipped < offset) {
+        // skip a single point
+        skipped++;
+      } else {
+        // add a single point
+        result.push(child);
+      }
+      if (result.length === limit) break;
+    }
+    return skipped;
+  }
+  _createTree(data) {
+    const tree = new KDBush(data.length / this.stride | 0, this.options.nodeSize, Float32Array);
+    for (let i = 0; i < data.length; i += this.stride) tree.add(data[i], data[i + 1]);
+    tree.finish();
+    tree.data = data;
+    return tree;
+  }
+  _addTileFeatures(ids, data, x, y, z2, tile) {
+    for (const i of ids) {
+      const k = i * this.stride;
+      const isCluster = data[k + OFFSET_NUM] > 1;
+      let tags, px, py;
+      if (isCluster) {
+        tags = getClusterProperties(data, k, this.clusterProps);
+        px = data[k];
+        py = data[k + 1];
+      } else {
+        const p = this.points[data[k + OFFSET_ID]];
+        tags = p.properties;
+        const [lng, lat] = p.geometry.coordinates;
+        px = lngX(lng);
+        py = latY(lat);
+      }
+      const f = {
+        type: 1,
+        geometry: [[Math.round(this.options.extent * (px * z2 - x)), Math.round(this.options.extent * (py * z2 - y))]],
+        tags
+      };
 
-function getClusterProperties(cluster) {
-    var count = cluster.numPoints;
-    var abbrev = count >= 10000 ? Math.round(count / 1000) + 'k' : count >= 1000 ? Math.round(count / 100) / 10 + 'k' : count;
-    return extend(extend({}, cluster.properties), {
-        cluster: true,
-        cluster_id: cluster.id,
-        point_count: count,
-        point_count_abbreviated: abbrev
-    });
+      // assign id
+      let id;
+      if (isCluster || this.options.generateId) {
+        // optionally generate id for points
+        id = data[k + OFFSET_ID];
+      } else {
+        // keep id if already assigned
+        id = this.points[data[k + OFFSET_ID]].id;
+      }
+      if (id !== undefined) f.id = id;
+      tile.features.push(f);
+    }
+  }
+  _limitZoom(z) {
+    return Math.max(this.options.minZoom, Math.min(Math.floor(+z), this.options.maxZoom + 1));
+  }
+  _cluster(tree, zoom) {
+    const {
+      radius,
+      extent,
+      reduce,
+      minPoints
+    } = this.options;
+    const r = radius / (extent * Math.pow(2, zoom));
+    const data = tree.data;
+    const nextData = [];
+    const stride = this.stride;
+
+    // loop through each point
+    for (let i = 0; i < data.length; i += stride) {
+      // if we've already visited the point at this zoom level, skip it
+      if (data[i + OFFSET_ZOOM] <= zoom) continue;
+      data[i + OFFSET_ZOOM] = zoom;
+
+      // find all nearby points
+      const x = data[i];
+      const y = data[i + 1];
+      const neighborIds = tree.within(data[i], data[i + 1], r);
+      const numPointsOrigin = data[i + OFFSET_NUM];
+      let numPoints = numPointsOrigin;
+
+      // count the number of points in a potential cluster
+      for (const neighborId of neighborIds) {
+        const k = neighborId * stride;
+        // filter out neighbors that are already processed
+        if (data[k + OFFSET_ZOOM] > zoom) numPoints += data[k + OFFSET_NUM];
+      }
+
+      // if there were neighbors to merge, and there are enough points to form a cluster
+      if (numPoints > numPointsOrigin && numPoints >= minPoints) {
+        let wx = x * numPointsOrigin;
+        let wy = y * numPointsOrigin;
+        let clusterProperties;
+        let clusterPropIndex = -1;
+
+        // encode both zoom and point index on which the cluster originated -- offset by total length of features
+        const id = ((i / stride | 0) << 5) + (zoom + 1) + this.points.length;
+        for (const neighborId of neighborIds) {
+          const k = neighborId * stride;
+          if (data[k + OFFSET_ZOOM] <= zoom) continue;
+          data[k + OFFSET_ZOOM] = zoom; // save the zoom (so it doesn't get processed twice)
+
+          const numPoints2 = data[k + OFFSET_NUM];
+          wx += data[k] * numPoints2; // accumulate coordinates for calculating weighted center
+          wy += data[k + 1] * numPoints2;
+          data[k + OFFSET_PARENT] = id;
+          if (reduce) {
+            if (!clusterProperties) {
+              clusterProperties = this._map(data, i, true);
+              clusterPropIndex = this.clusterProps.length;
+              this.clusterProps.push(clusterProperties);
+            }
+            reduce(clusterProperties, this._map(data, k));
+          }
+        }
+        data[i + OFFSET_PARENT] = id;
+        nextData.push(wx / numPoints, wy / numPoints, Infinity, id, -1, numPoints);
+        if (reduce) nextData.push(clusterPropIndex);
+      } else {
+        // left points as unclustered
+        for (let j = 0; j < stride; j++) nextData.push(data[i + j]);
+        if (numPoints > 1) {
+          for (const neighborId of neighborIds) {
+            const k = neighborId * stride;
+            if (data[k + OFFSET_ZOOM] <= zoom) continue;
+            data[k + OFFSET_ZOOM] = zoom;
+            for (let j = 0; j < stride; j++) nextData.push(data[k + j]);
+          }
+        }
+      }
+    }
+    return nextData;
+  }
+
+  // get index of the point from which the cluster originated
+  _getOriginId(clusterId) {
+    return clusterId - this.points.length >> 5;
+  }
+
+  // get zoom of the point from which the cluster originated
+  _getOriginZoom(clusterId) {
+    return (clusterId - this.points.length) % 32;
+  }
+  _map(data, i, clone) {
+    if (data[i + OFFSET_NUM] > 1) {
+      const props = this.clusterProps[data[i + OFFSET_PROP]];
+      return clone ? Object.assign({}, props) : props;
+    }
+    const original = this.points[data[i + OFFSET_ID]].properties;
+    const result = this.options.map(original);
+    return clone && result === original ? Object.assign({}, result) : result;
+  }
+}
+function getClusterJSON(data, i, clusterProps) {
+  return {
+    type: 'Feature',
+    id: data[i + OFFSET_ID],
+    properties: getClusterProperties(data, i, clusterProps),
+    geometry: {
+      type: 'Point',
+      coordinates: [xLng(data[i]), yLat(data[i + 1])]
+    }
+  };
+}
+function getClusterProperties(data, i, clusterProps) {
+  const count = data[i + OFFSET_NUM];
+  const abbrev = count >= 10000 ? `${Math.round(count / 1000)}k` : count >= 1000 ? `${Math.round(count / 100) / 10}k` : count;
+  const propIndex = data[i + OFFSET_PROP];
+  const properties = propIndex === -1 ? {} : Object.assign({}, clusterProps[propIndex]);
+  return Object.assign(properties, {
+    cluster: true,
+    cluster_id: data[i + OFFSET_ID],
+    point_count: count,
+    point_count_abbreviated: abbrev
+  });
 }
 
 // longitude/latitude to spherical mercator in [0..1] range
 function lngX(lng) {
-    return lng / 360 + 0.5;
+  return lng / 360 + 0.5;
 }
 function latY(lat) {
-    var sin = Math.sin(lat * Math.PI / 180),
-        y = 0.5 - 0.25 * Math.log((1 + sin) / (1 - sin)) / Math.PI;
-    return y < 0 ? 0 : y > 1 ? 1 : y;
+  const sin = Math.sin(lat * Math.PI / 180);
+  const y = 0.5 - 0.25 * Math.log((1 + sin) / (1 - sin)) / Math.PI;
+  return y < 0 ? 0 : y > 1 ? 1 : y;
 }
 
 // spherical mercator to longitude/latitude
 function xLng(x) {
-    return (x - 0.5) * 360;
+  return (x - 0.5) * 360;
 }
 function yLat(y) {
-    var y2 = (180 - y * 360) * Math.PI / 180;
-    return 360 * Math.atan(Math.exp(y2)) / Math.PI - 90;
+  const y2 = (180 - y * 360) * Math.PI / 180;
+  return 360 * Math.atan(Math.exp(y2)) / Math.PI - 90;
 }
 
-function extend(dest, src) {
-    for (var id in src) {
-        dest[id] = src[id];
-    }return dest;
-}
-
-function getX(p) {
-    return p.x;
-}
-function getY(p) {
-    return p.y;
-}
-
-/* eslint no-underscore-dangle: 0 */
-
-var _ref$2 = typeof window !== 'undefined' ? window : {},
-    L$2 = _ref$2.L;
-
-var defaultSizes = {
+const {
+  L: L$6
+} = typeof window !== 'undefined' ? window : {};
+const defaultSizes = {
   50: 25,
   100: 30,
   1000: 40
 };
-
-var ClusterLayer = L$2 && L$2.GeoJSON.extend({
-  initialize: function initialize(layerModel) {
-    var _this = this;
-
-    var self = this;
-    L$2.GeoJSON.prototype.initialize.call(this, []);
-    var layerConfig = layerModel.layerConfig,
-        events = layerModel.events,
-        decodeClusters = layerModel.decodeClusters;
-
+const ClusterLayer = L$6 && L$6.GeoJSON.extend({
+  initialize(layerModel) {
+    const self = this;
+    L$6.GeoJSON.prototype.initialize.call(this, []);
+    const {
+      layerConfig,
+      events,
+      decodeClusters
+    } = layerModel;
     if (!decodeClusters) {
       console.warn('You must provide a decodeClusters function');
       return;
     }
-
-    var _ref2 = layerModel.layerConfig || {},
-        html = _ref2.html,
-        _ref2$sizes = _ref2.sizes,
-        sizes = _ref2$sizes === undefined ? defaultSizes : _ref2$sizes,
-        clusterIcon = _ref2.clusterIcon,
-        icon = _ref2.icon;
-
-    L$2.Util.setOptions(this, {
+    const {
+      html,
+      sizes = defaultSizes,
+      clusterIcon,
+      icon
+    } = layerModel.layerConfig || {};
+    L$6.Util.setOptions(this, {
       // converts feature to icon
-      pointToLayer: function pointToLayer(feature, latlng) {
-        var isCluster = feature.properties && feature.properties.cluster;
+      pointToLayer(feature, latlng) {
+        const isCluster = feature.properties && feature.properties.cluster;
 
         // if cluster return point icon
         if (!isCluster) {
           // see documentation for icon config https://leafletjs.com/reference-1.3.4.html#icon
-          return L$2.marker(latlng, { icon: L$2.icon(_extends({ iconSize: [35, 35] }, icon)) });
-        }
-
-        var count = feature.properties.point_count;
-        var iconSize = null;
-
-        if (typeof sizes === 'function') {
-          iconSize = function iconSize() {
-            return sizes(count);
-          };
-        } else {
-          var sizeKey = Object.keys(sizes).find(function (o) {
-            return count <= parseInt(o, 10);
+          return L$6.marker(latlng, {
+            icon: L$6.icon(_objectSpread2({
+              iconSize: [35, 35]
+            }, icon))
           });
-          var size = sizes[sizeKey];
-          iconSize = L$2.point(size, size);
+        }
+        const count = feature.properties.point_count;
+        let iconSize = null;
+        if (typeof sizes === 'function') {
+          iconSize = () => sizes(count);
+        } else {
+          const sizeKey = Object.keys(sizes).find(o => count <= parseInt(o, 10));
+          const size = sizes[sizeKey];
+          iconSize = L$6.point(size, size);
         }
 
         // see documentation for icon config https://leafletjs.com/reference-1.3.4.html#divicon
-        return L$2.marker(latlng, {
-          icon: L$2.divIcon(_extends({
-            iconSize: iconSize,
-            html: html && typeof html === 'function' ? html(feature) : '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; ' + (clusterIcon.color ? 'background-color: ' + clusterIcon.color + ';' : '') + '">' + feature.properties.point_count_abbreviated + '</div>'
+        return L$6.marker(latlng, {
+          icon: L$6.divIcon(_objectSpread2({
+            iconSize,
+            html: html && typeof html === 'function' ? html(feature) : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; ${clusterIcon.color ? `background-color: ${clusterIcon.color};` : ''}">${feature.properties.point_count_abbreviated}</div>`
           }, clusterIcon))
         });
       },
-
-
       // parses each feature before adding to the map
-      onEachFeature: function onEachFeature(feature, layer) {
+      onEachFeature(feature, layer) {
         if (feature.properties && feature.properties.cluster) {
           layer.on({
-            click: function click() {
-              return self.setMapView(feature);
-            }
+            click: () => self.setMapView(feature)
           });
         } else if (events) {
-          layer.on(Object.keys(events).reduce(function (obj, event) {
-            return _extends({}, obj, defineProperty({}, event, function (e) {
-              return events[event](_extends({}, e, { data: feature.properties }));
-            }));
-          }, {}));
+          layer.on(Object.keys(events).reduce((obj, event) => _objectSpread2(_objectSpread2({}, obj), {}, {
+            [event]: e => events[event](_objectSpread2(_objectSpread2({}, e), {}, {
+              data: feature.properties
+            }))
+          }), {}));
         }
       }
     });
 
     // https://github.com/mapbox/supercluster options available here
-
-    var _ref3 = layerConfig || {},
-        clusterConfig = _ref3.clusterConfig;
-
-    this.supercluster = supercluster(_extends({
+    const {
+      clusterConfig
+    } = layerConfig || {};
+    this.supercluster = Supercluster(_objectSpread2({
       radius: 80,
       maxZoom: 16
     }, clusterConfig));
-
-    fetchData(layerModel).then(function (response) {
+    fetchData(layerModel).then(response => {
       // Handle canceled requests - don't process further
-      if (response === CANCELED$1) {
+      if (response === CANCELED) {
         return;
       }
-
-      var features = decodeClusters(response);
-      _this.supercluster.load(features);
-      _this.update();
+      const features = decodeClusters(response);
+      this.supercluster.load(features);
+      this.update();
     });
   },
-  setMapView: function setMapView(feature) {
-    var center = feature.geometry.coordinates;
-    var zoom = this.supercluster.getClusterExpansionZoom(feature.properties.cluster_id);
+  setMapView(feature) {
+    const center = feature.geometry.coordinates;
+    const zoom = this.supercluster.getClusterExpansionZoom(feature.properties.cluster_id);
     this._map.setView(center.reverse(), zoom);
   },
-  onAdd: function onAdd(map) {
-    L$2.GeoJSON.prototype.onAdd.call(this, map);
+  onAdd(map) {
+    L$6.GeoJSON.prototype.onAdd.call(this, map);
     map.on('moveend zoomend', this.onMove, this);
   },
-  onRemove: function onRemove(map) {
+  onRemove(map) {
     map.off('moveend zoomend', this.onMove, this);
     this.clear();
   },
-  onMove: function onMove() {
+  onMove() {
     this.clear();
     this.update();
   },
-  update: function update() {
-    var zoom = this._map.getZoom();
-    var bounds = this._map.getBounds();
-    var clusterBounds = [bounds._southWest.lng, bounds._southWest.lat, bounds._northEast.lng, bounds._northEast.lat];
-    var clusters = this.supercluster.getClusters(clusterBounds, zoom);
+  update() {
+    const zoom = this._map.getZoom();
+    const bounds = this._map.getBounds();
+    const clusterBounds = [bounds._southWest.lng, bounds._southWest.lat, bounds._northEast.lng, bounds._northEast.lat];
+    const clusters = this.supercluster.getClusters(clusterBounds, zoom);
     this.addData(clusters);
   },
-  clear: function clear() {
-    L$2.GeoJSON.prototype.clearLayers.call(this, []);
+  clear() {
+    L$6.GeoJSON.prototype.clearLayers.call(this, []);
   }
 });
 
-var _ref$3 = typeof window !== 'undefined' ? window : {},
-    L$3 = _ref$3.L;
-
-var UTFGridLayer = L$3 && L$3.GridLayer.extend({
+const {
+  L: L$5
+} = typeof window !== 'undefined' ? window : {};
+const UTFGridLayer = L$5 && L$5.GridLayer.extend({
   tiles: {},
   cache: {},
   mouseOn: null,
-  createTile: function createTile(_ref2) {
-    var z = _ref2.z;
-
+  createTile({
+    z
+  }) {
     // Delete all tiles from others zooms;
-    var tilesKeys = Object.keys(this.tiles);
-    for (var i = 0; i < tilesKeys.length; i++) {
+    const tilesKeys = Object.keys(this.tiles);
+    for (let i = 0; i < tilesKeys.length; i++) {
       if (this.tiles[tilesKeys[i]].z !== z) {
         delete this.tiles[tilesKeys[i]];
       }
     }
-
-    var tile = L$3.DomUtil.create('div', 'leaflet-tile');
-    var size = this.getTileSize();
+    const tile = L$5.DomUtil.create('div', 'leaflet-tile');
+    const size = this.getTileSize();
 
     // setup tile width and height according to the options
     tile.width = size.x;
     tile.height = size.y;
-
     return tile;
   },
-  onAdd: function onAdd(map) {
+  onAdd(map) {
     // Very important line
-    L$3.GridLayer.prototype.onAdd.call(this, map);
-
+    L$5.GridLayer.prototype.onAdd.call(this, map);
     this.map = map;
-
-    var zoom = Math.round(this.map.getZoom());
-
+    const zoom = Math.round(this.map.getZoom());
     if (zoom > this.options.maxZoom || zoom < this.options.minZoom) {
       return;
     }
-
     map.on('click', this.click, this);
     map.on('mousemove', this.move, this);
   },
-  onRemove: function onRemove() {
-    var map = this.map;
-
+  onRemove() {
+    const {
+      map
+    } = this;
     map.off('click', this.click, this);
     map.off('mousemove', this.move, this);
   },
-  click: function click(e) {
+  click(e) {
     this.fire('click', this.objectForEvent(e));
   },
-  move: function move(e) {
-    var on = this.objectForEvent(e);
-
+  move(e) {
+    const on = this.objectForEvent(e);
     if (on.data !== this.mouseOn) {
       if (this.mouseOn) {
-        this.fire('mouseout', { latlng: e.latlng, data: this.mouseOn });
+        this.fire('mouseout', {
+          latlng: e.latlng,
+          data: this.mouseOn
+        });
       }
       if (on.data) {
         this.fire('mouseover', on);
       }
-
       this.mouseOn = on.data;
     } else if (on.data) {
       this.fire('mousemove', on);
     }
   },
-  objectForEvent: function objectForEvent(e) {
-    return L$3.extend({ latlng: e.latlng, data: null }, e);
+  objectForEvent(e) {
+    return L$5.extend({
+      latlng: e.latlng,
+      data: null
+    }, e);
   }
 });
 
-var _ref$4 = typeof window !== 'undefined' ? window : {},
-    L$4 = _ref$4.L;
-
-var eval2 = eval;
-
-var LeafletLayer = function LeafletLayer(layerModel) {
+const {
+  L: L$4
+} = typeof window !== 'undefined' ? window : {};
+const eval2$1 = eval;
+const LeafletLayer = layerModel => {
   if (!L$4) throw new Error('Leaflet must be defined.');
-
-  var layerConfig = layerModel.layerConfig,
-      params = layerModel.params,
-      sqlParams = layerModel.sqlParams,
-      decodeParams = layerModel.decodeParams,
-      interactivity = layerModel.interactivity;
-
-  var layer = void 0;
-
-  var layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
+  const {
+    layerConfig,
+    params,
+    sqlParams,
+    decodeParams,
+    interactivity
+  } = layerModel;
+  let layer;
+  const layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
 
   // Transforming data layer
   if (layerConfigParsed.body.crs && L$4.CRS[layerConfigParsed.body.crs]) {
     layerConfigParsed.body.crs = L$4.CRS[layerConfigParsed.body.crs.replace(':', '')];
     layerConfigParsed.body.pane = 'tilePane';
   }
-
   switch (layerConfigParsed.type) {
     case 'wms':
       layer = L$4.tileLayer.wms(layerConfigParsed.url || layerConfigParsed.body.url, layerConfigParsed.body);
       break;
     case 'tileLayer':
       if (JSON.stringify(layerConfigParsed.body).indexOf('style: "function') >= 0) {
-        layerConfigParsed.body.style = eval2('(' + layerConfigParsed.body.style + ')');
+        layerConfigParsed.body.style = eval2$1(`(${layerConfigParsed.body.style})`);
       }
       if (decodeParams && layerConfigParsed.canvas) {
-        layer = new CanvasLayer(_extends({}, layerModel));
+        layer = new CanvasLayer(_objectSpread2({}, layerModel));
       } else {
         layer = L$4.tileLayer(layerConfigParsed.url || layerConfigParsed.body.url, layerConfigParsed.body);
       }
 
       // Add interactivity
       if (interactivity) {
-        var interactiveLayer = new UTFGridLayer();
-
-        var LayerGroup = L$4.LayerGroup.extend({
+        const interactiveLayer = new UTFGridLayer();
+        const LayerGroup = L$4.LayerGroup.extend({
           group: true,
-          setOpacity: function setOpacity(opacity) {
-            layerModel.mapLayer.getLayers().forEach(function (l) {
+          setOpacity: opacity => {
+            layerModel.mapLayer.getLayers().forEach(l => {
               l.setOpacity(opacity);
             });
           }
         });
-
         layer = new LayerGroup([layer, interactiveLayer]);
       }
-
       break;
     case 'cluster':
       if (JSON.stringify(layerConfigParsed.body).indexOf('style: "function') >= 0) {
-        layerConfigParsed.body.style = eval2('(' + layerConfigParsed.body.style + ')');
+        layerConfigParsed.body.style = eval2$1(`(${layerConfigParsed.body.style})`);
       }
       layer = new ClusterLayer(layerModel);
       break;
@@ -1777,8 +1760,7 @@ var LeafletLayer = function LeafletLayer(layerModel) {
       layer = L$4[layerConfigParsed.type](layerConfigParsed.body, layerConfigParsed.options || {});
       break;
   }
-
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     if (layer) {
       resolve(layer);
     } else {
@@ -1786,24 +1768,20 @@ var LeafletLayer = function LeafletLayer(layerModel) {
     }
   });
 };
-
-LeafletLayer.getBounds = function (layerModel) {
+LeafletLayer.getBounds = layerModel => {
   if (!L$4) throw new Error('Leaflet must be defined.');
-
-  var layerConfig = layerModel.layerConfig,
-      params = layerModel.params,
-      sqlParams = layerModel.sqlParams;
-
-
-  var layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
-
-  var bbox = layerConfigParsed.bbox;
-
-
-  return new Promise(function (resolve) {
+  const {
+    layerConfig,
+    params,
+    sqlParams
+  } = layerModel;
+  const layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
+  const {
+    bbox
+  } = layerConfigParsed;
+  return new Promise(resolve => {
     if (bbox) {
-      var bounds = [[bbox[1], bbox[0]], [bbox[3], bbox[2]]];
-
+      const bounds = [[bbox[1], bbox[0]], [bbox[3], bbox[2]]];
       resolve(bounds);
     } else {
       resolve(null);
@@ -1811,64 +1789,52 @@ LeafletLayer.getBounds = function (layerModel) {
   });
 };
 
-/* eslint no-underscore-dangle: ["error", { "allow": ["_currentImage", "_image"] }] */
-
-var _ref$5 = typeof window !== 'undefined' ? window : {},
-    L$5 = _ref$5.L;
-
-var eval2$1 = eval;
-
-var EsriLayer = function EsriLayer(layerModel) {
-  if (!L$5) throw new Error('Leaflet must be defined.');
-  if (!L$5.esri) {
+const {
+  L: L$3
+} = typeof window !== 'undefined' ? window : {};
+const eval2 = eval;
+const EsriLayer = layerModel => {
+  if (!L$3) throw new Error('Leaflet must be defined.');
+  if (!L$3.esri) {
     throw new Error('To support this layer you should add esri library for Leaflet.');
   }
 
   // Preparing layerConfig
-  var layerConfig = layerModel.layerConfig,
-      interactivity = layerModel.interactivity,
-      params = layerModel.params,
-      sqlParams = layerModel.sqlParams;
-
-  var layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
-
-  var bodyStringified = JSON.stringify(layerConfigParsed.body || {}).replace(/"mosaic-rule":/g, '"mosaicRule":').replace(/"mosaic_rule":/g, '"mosaicRule":').replace(/"use-cors":/g, '"useCors":').replace(/"use_cors":/g, '"useCors":');
+  const {
+    layerConfig,
+    interactivity,
+    params,
+    sqlParams
+  } = layerModel;
+  const layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
+  const bodyStringified = JSON.stringify(layerConfigParsed.body || {}).replace(/"mosaic-rule":/g, '"mosaicRule":').replace(/"mosaic_rule":/g, '"mosaicRule":').replace(/"use-cors":/g, '"useCors":').replace(/"use_cors":/g, '"useCors":');
 
   // If type is a method of leaflet, returns LeafletLayer
-  if (L$5[layerConfigParsed.type]) return new LeafletLayer(_extends({}, layerModel));
-
-  return new Promise(function (resolve, reject) {
-    if (!L$5.esri[layerConfigParsed.type]) {
+  if (L$3[layerConfigParsed.type]) return new LeafletLayer(_objectSpread2({}, layerModel));
+  return new Promise((resolve, reject) => {
+    if (!L$3.esri[layerConfigParsed.type]) {
       return reject(new Error('"type" specified in layer spec doesn`t exist'));
     }
-
-    var layerOptions = JSON.parse(bodyStringified);
+    const layerOptions = JSON.parse(bodyStringified);
     layerOptions.pane = 'tilePane';
     layerOptions.useCors = true;
     // forcing cors
     if (layerOptions.style && layerOptions.style.indexOf('function') >= 0) {
-      layerOptions.style = eval2$1('(' + layerOptions.style + ')');
+      layerOptions.style = eval2(`(${layerOptions.style})`);
     }
-
-    var layer = void 0;
-
-    layer = L$5.esri[layerConfigParsed.type](layerOptions);
-
+    let layer;
+    layer = L$3.esri[layerConfigParsed.type](layerOptions);
     if (layer) {
       // Little hack to set zIndex at the beginning
-      layer.on('load', function () {
+      layer.on('load', () => {
         layer.setZIndex(layerModel.zIndex);
       });
-
-      layer.on('requesterror', function (err) {
-        return console.error(err);
-      });
+      layer.on('requesterror', err => console.error(err));
     } else {
       return reject();
     }
-
     if (!layer.setZIndex) {
-      layer.setZIndex = function (zIndex) {
+      layer.setZIndex = zIndex => {
         if (layer._currentImage) {
           layer._currentImage._image.style.zIndex = zIndex;
         }
@@ -1877,71 +1843,64 @@ var EsriLayer = function EsriLayer(layerModel) {
 
     // Add interactivity
     if (interactivity) {
-      var interactiveLayer = new UTFGridLayer();
-
-      var LayerGroup = L$5.LayerGroup.extend({
+      const interactiveLayer = new UTFGridLayer();
+      const LayerGroup = L$3.LayerGroup.extend({
         group: true,
-        setOpacity: function setOpacity(opacity) {
-          layerModel.mapLayer.getLayers().forEach(function (l) {
+        setOpacity: opacity => {
+          layerModel.mapLayer.getLayers().forEach(l => {
             l.setOpacity(opacity);
           });
         }
       });
-
       layer = new LayerGroup([layer, interactiveLayer]);
     }
-
     return resolve(layer);
   });
 };
 
-var _ref$6 = typeof window !== 'undefined' ? window : {},
-    L$6 = _ref$6.L;
-
-var GEELayer = function GEELayer(layerModel) {
-  if (!L$6) throw new Error('Leaflet must be defined.');
-
-  var id = layerModel.id,
-      layerConfig = layerModel.layerConfig,
-      interactivity = layerModel.interactivity,
-      params = layerModel.params,
-      sqlParams = layerModel.sqlParams,
-      decodeParams = layerModel.decodeParams;
-
-  var tileUrl = 'https://api.resourcewatch.org/v1/layer/' + id + '/tile/gee/{z}/{x}/{y}';
-  var layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
-  var layer = void 0;
-
+const {
+  L: L$2
+} = typeof window !== 'undefined' ? window : {};
+const GEELayer = layerModel => {
+  if (!L$2) throw new Error('Leaflet must be defined.');
+  const {
+    id,
+    layerConfig,
+    interactivity,
+    params,
+    sqlParams,
+    decodeParams
+  } = layerModel;
+  const tileUrl = `https://api.resourcewatch.org/v1/layer/${id}/tile/gee/{z}/{x}/{y}`;
+  const layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
+  let layer;
   switch (layerConfigParsed.type) {
     case 'tileLayer':
       if (decodeParams) {
-        layer = new CanvasLayer(_extends({}, layerModel));
+        layer = new CanvasLayer(_objectSpread2({}, layerModel));
       } else {
-        layer = L$6.tileLayer(tileUrl, layerConfigParsed.body);
+        layer = L$2.tileLayer(tileUrl, layerConfigParsed.body);
       }
       break;
     default:
-      layer = L$6.tileLayer(tileUrl, layerConfigParsed.body);
+      layer = L$2.tileLayer(tileUrl, layerConfigParsed.body);
       break;
   }
 
   // Add interactivity
   if (interactivity) {
-    var interactiveLayer = new UTFGridLayer();
-
-    var LayerGroup = L$6.LayerGroup.extend({
+    const interactiveLayer = new UTFGridLayer();
+    const LayerGroup = L$2.LayerGroup.extend({
       group: true,
-      setOpacity: function setOpacity(opacity) {
-        layerModel.mapLayer.getLayers().forEach(function (l) {
+      setOpacity: opacity => {
+        layerModel.mapLayer.getLayers().forEach(l => {
           l.setOpacity(opacity);
         });
       }
     });
-
     layer = new LayerGroup([layer, interactiveLayer]);
   }
-
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     if (layer) {
       resolve(layer);
     } else {
@@ -1950,90 +1909,84 @@ var GEELayer = function GEELayer(layerModel) {
   });
 };
 
-var _ref$7 = typeof window !== 'undefined' ? window : {},
-    L$7 = _ref$7.L;
-
-var maxBounds = L$7 && new L$7.LatLngBounds(new L$7.LatLng(49.496674527470455, -66.357421875), new L$7.LatLng(24.607069137709683, -131.66015625));
-
-var LOCALayer = function LOCALayer(layerModel) {
-  var id = layerModel.id,
-      layerConfig = layerModel.layerConfig,
-      interactivity = layerModel.interactivity;
-  var period = layerConfig.period;
-
-  var year = (period || {}).value || '1971';
-  var dateString = new Date(year).toISOString();
-  var tileUrl = 'https://api.resourcewatch.org/v1/layer/' + id + '/tile/loca/{z}/{x}/{y}?year=' + dateString;
-
-  var layer = L$7.tileLayer(tileUrl, _extends({}, layerConfig.body, {
+const {
+  L: L$1
+} = typeof window !== 'undefined' ? window : {};
+const maxBounds = L$1 && new L$1.LatLngBounds(new L$1.LatLng(49.4966745, -66.357422), new L$1.LatLng(24.6070691, -131.660156));
+const LOCALayer = layerModel => {
+  const {
+    id,
+    layerConfig,
+    interactivity
+  } = layerModel;
+  const {
+    period
+  } = layerConfig;
+  const year = (period || {}).value || '1971';
+  const dateString = new Date(year).toISOString();
+  const tileUrl = `https://api.resourcewatch.org/v1/layer/${id}/tile/loca/{z}/{x}/{y}?year=${dateString}`;
+  let layer = L$1.tileLayer(tileUrl, _objectSpread2(_objectSpread2({}, layerConfig.body), {}, {
     minNativeZoom: 4,
     bounds: maxBounds
   }));
 
   // Add interactivity
   if (interactivity) {
-    var interactiveLayer = new UTFGridLayer();
-
-    var LayerGroup = L$7.LayerGroup.extend({
+    const interactiveLayer = new UTFGridLayer();
+    const LayerGroup = L$1.LayerGroup.extend({
       group: true,
-      setOpacity: function setOpacity(opacity) {
-        layerModel.mapLayer.getLayers().forEach(function (l) {
+      setOpacity: opacity => {
+        layerModel.mapLayer.getLayers().forEach(l => {
           l.setOpacity(opacity);
         });
       }
     });
-
     layer = new LayerGroup([layer, interactiveLayer]);
   }
-
-  return new Promise(function (resolve) {
+  return new Promise(resolve => {
     resolve(layer);
   });
 };
 
-var _ref$8 = typeof window !== 'undefined' ? window : {},
-    L$8 = _ref$8.L;
-
-var NEXGDDPLayer = function NEXGDDPLayer(layerModel) {
-  var id = layerModel.id,
-      layerConfig = layerModel.layerConfig,
-      interactivity = layerModel.interactivity;
-  var period = layerConfig.period;
-
-  var year = (period || {}).value || '1971-01-01';
-  var dateString = new Date(year).toISOString();
-  var tileUrl = 'https://api.resourcewatch.org/v1/layer/' + id + '/tile/nexgddp/{z}/{x}/{y}?year=' + dateString;
-
-  var layer = L$8.tileLayer(tileUrl, layerConfig.body);
+const {
+  L
+} = typeof window !== 'undefined' ? window : {};
+const NEXGDDPLayer = layerModel => {
+  const {
+    id,
+    layerConfig,
+    interactivity
+  } = layerModel;
+  const {
+    period
+  } = layerConfig;
+  const year = (period || {}).value || '1971-01-01';
+  const dateString = new Date(year).toISOString();
+  const tileUrl = `https://api.resourcewatch.org/v1/layer/${id}/tile/nexgddp/{z}/{x}/{y}?year=${dateString}`;
+  let layer = L.tileLayer(tileUrl, layerConfig.body);
 
   // Add interactivity
   if (interactivity) {
-    var interactiveLayer = new UTFGridLayer();
-
-    var LayerGroup = L$8.LayerGroup.extend({
+    const interactiveLayer = new UTFGridLayer();
+    const LayerGroup = L.LayerGroup.extend({
       group: true,
-      setOpacity: function setOpacity(opacity) {
-        layerModel.mapLayer.getLayers().forEach(function (l) {
+      setOpacity: opacity => {
+        layerModel.mapLayer.getLayers().forEach(l => {
           l.setOpacity(opacity);
         });
       }
     });
-
     layer = new LayerGroup([layer, interactiveLayer]);
   }
-
-  return new Promise(function (resolve) {
+  return new Promise(resolve => {
     resolve(layer);
   });
 };
 
-var PluginLeaflet = function () {
-  function PluginLeaflet(map) {
-    var _this = this;
-
-    classCallCheck(this, PluginLeaflet);
-    this.events = {};
-    this.method = {
+class PluginLeaflet {
+  constructor(map) {
+    _defineProperty(this, "events", {});
+    _defineProperty(this, "method", {
       // CARTO
       cartodb: CartoLayer,
       carto: CartoLayer,
@@ -2053,18 +2006,22 @@ var PluginLeaflet = function () {
       // LEAFLET
       leaflet: LeafletLayer,
       wms: LeafletLayer
-    };
-
-    this.setEvents = function (layerModel) {
-      var mapLayer = layerModel.mapLayer,
-          events = layerModel.events;
-
+    });
+    /**
+     * A namespace to set DOM events
+     * @param {Object} layerModel
+    */
+    _defineProperty(this, "setEvents", layerModel => {
+      const {
+        mapLayer,
+        events
+      } = layerModel;
       if (layerModel.layerConfig.type !== 'cluster') {
         // Remove current events
-        if (_this.events[layerModel.id]) {
-          Object.keys(_this.events[layerModel.id]).forEach(function (k) {
+        if (this.events[layerModel.id]) {
+          Object.keys(this.events[layerModel.id]).forEach(k => {
             if (mapLayer.group) {
-              mapLayer.eachLayer(function (l) {
+              mapLayer.eachLayer(l => {
                 l.off(k);
               });
             } else {
@@ -2074,9 +2031,9 @@ var PluginLeaflet = function () {
         }
 
         // Add new events
-        Object.keys(events).forEach(function (k) {
+        Object.keys(events).forEach(k => {
           if (mapLayer.group) {
-            mapLayer.eachLayer(function (l) {
+            mapLayer.eachLayer(l => {
               l.on(k, events[k]);
             });
           } else {
@@ -2084,181 +2041,146 @@ var PluginLeaflet = function () {
           }
         });
         // Set this.events equal to current ones
-        _this.events[layerModel.id] = events;
+        this.events[layerModel.id] = events;
       }
-
-      return _this;
-    };
-
-    this.fitMapToLayer = function (layerModel) {
-      var bounds = layerModel.get('mapLayerBounds');
-
+      return this;
+    });
+    _defineProperty(this, "fitMapToLayer", layerModel => {
+      const bounds = layerModel.get('mapLayerBounds');
       if (bounds) {
-        _this.map.fitBounds(bounds);
+        this.map.fitBounds(bounds);
       }
-    };
-
+    });
     this.map = map;
   }
+  /**
+   * Add a layer
+   * @param {Object} layerModel
+   */
+  add(layerModel) {
+    const {
+      mapLayer
+    } = layerModel;
+    this.map.addLayer(mapLayer);
+  }
 
-  createClass(PluginLeaflet, [{
-    key: 'add',
-
-
-    /**
-     * Add a layer
-     * @param {Object} layerModel
-     */
-    value: function add(layerModel) {
-      var mapLayer = layerModel.mapLayer;
-
-
-      this.map.addLayer(mapLayer);
+  /**
+   * Remove a layer
+   * @param {Object} layerModel
+   */
+  remove(layerModel) {
+    const {
+      mapLayer,
+      events
+    } = layerModel;
+    if (events && mapLayer) {
+      Object.keys(events).forEach(k => {
+        if (mapLayer.group) {
+          mapLayer.eachLayer(l => {
+            l.off(k);
+          });
+        } else {
+          mapLayer.off(k);
+        }
+      });
     }
+    if (mapLayer) {
+      this.map.removeLayer(mapLayer);
+    }
+  }
 
-    /**
-     * Remove a layer
-     * @param {Object} layerModel
-     */
+  /**
+   * Get provider method
+   * @param {String} provider
+   */
+  getLayerByProvider(provider) {
+    return this.method[provider];
+  }
 
-  }, {
-    key: 'remove',
-    value: function remove(layerModel) {
-      var mapLayer = layerModel.mapLayer,
-          events = layerModel.events;
+  /**
+   * A request to layer bounds
+   */
+  getLayerBoundsByProvider(provider) {
+    return this.method[provider].getBounds;
+  }
 
+  /**
+   * A namespace to set z-index
+   * @param {Object} layerModel
+   * @param {Number} zIndex
+   */
+  setZIndex(layerModel, zIndex) {
+    const {
+      mapLayer
+    } = layerModel;
+    mapLayer.setZIndex(zIndex);
+    return this;
+  }
 
-      if (events && mapLayer) {
-        Object.keys(events).forEach(function (k) {
-          if (mapLayer.group) {
-            mapLayer.eachLayer(function (l) {
-              l.off(k);
-            });
-          } else {
-            mapLayer.off(k);
-          }
+  /**
+   * A namespace to set opacity
+   * @param {Object} layerModel
+   * @param {Number} opacity
+   */
+  setOpacity(layerModel, opacity) {
+    const {
+      mapLayer
+    } = layerModel;
+    if (typeof mapLayer.setOpacity === 'function') {
+      mapLayer.setOpacity(opacity);
+    }
+    if (typeof mapLayer.setStyle === 'function') {
+      mapLayer.setStyle({
+        opacity
+      });
+    }
+    return this;
+  }
+
+  /**
+   * A namespace to hide or show a selected layer
+   * @param {Object} layerModel
+   * @param {Boolean} visibility
+   */
+  setVisibility(layerModel, visibility) {
+    const {
+      opacity
+    } = layerModel;
+    this.setOpacity(layerModel, !visibility ? 0 : opacity);
+  }
+  setParams(layerModel) {
+    this.remove(layerModel);
+  }
+  setLayerConfig(layerModel) {
+    this.remove(layerModel);
+  }
+  setDecodeParams(layerModel) {
+    const {
+      mapLayer,
+      params,
+      sqlParams,
+      decodeParams,
+      decodeFunction
+    } = layerModel;
+    if (mapLayer.group) {
+      mapLayer.eachLayer(l => {
+        if (l.reDraw) l.reDraw({
+          decodeParams,
+          decodeFunction,
+          params,
+          sqlParams
         });
-      }
-
-      if (mapLayer) {
-        this.map.removeLayer(mapLayer);
-      }
+      });
+    } else {
+      mapLayer.reDraw({
+        decodeParams,
+        decodeFunction,
+        params,
+        sqlParams
+      });
     }
+    return this;
+  }
+}
 
-    /**
-     * Get provider method
-     * @param {String} provider
-     */
-
-  }, {
-    key: 'getLayerByProvider',
-    value: function getLayerByProvider(provider) {
-      return this.method[provider];
-    }
-
-    /**
-     * A request to layer bounds
-     */
-
-  }, {
-    key: 'getLayerBoundsByProvider',
-    value: function getLayerBoundsByProvider(provider) {
-      return this.method[provider].getBounds;
-    }
-
-    /**
-     * A namespace to set z-index
-     * @param {Object} layerModel
-     * @param {Number} zIndex
-     */
-
-  }, {
-    key: 'setZIndex',
-    value: function setZIndex(layerModel, zIndex) {
-      var mapLayer = layerModel.mapLayer;
-
-
-      mapLayer.setZIndex(zIndex);
-
-      return this;
-    }
-
-    /**
-     * A namespace to set opacity
-     * @param {Object} layerModel
-     * @param {Number} opacity
-     */
-
-  }, {
-    key: 'setOpacity',
-    value: function setOpacity(layerModel, opacity) {
-      var mapLayer = layerModel.mapLayer;
-
-
-      if (typeof mapLayer.setOpacity === 'function') {
-        mapLayer.setOpacity(opacity);
-      }
-
-      if (typeof mapLayer.setStyle === 'function') {
-        mapLayer.setStyle({ opacity: opacity });
-      }
-
-      return this;
-    }
-
-    /**
-     * A namespace to hide or show a selected layer
-     * @param {Object} layerModel
-     * @param {Boolean} visibility
-     */
-
-  }, {
-    key: 'setVisibility',
-    value: function setVisibility(layerModel, visibility) {
-      var opacity = layerModel.opacity;
-
-
-      this.setOpacity(layerModel, !visibility ? 0 : opacity);
-    }
-
-    /**
-     * A namespace to set DOM events
-     * @param {Object} layerModel
-    */
-
-  }, {
-    key: 'setParams',
-    value: function setParams(layerModel) {
-      this.remove(layerModel);
-    }
-  }, {
-    key: 'setLayerConfig',
-    value: function setLayerConfig(layerModel) {
-      this.remove(layerModel);
-    }
-  }, {
-    key: 'setDecodeParams',
-    value: function setDecodeParams(layerModel) {
-      var mapLayer = layerModel.mapLayer,
-          params = layerModel.params,
-          sqlParams = layerModel.sqlParams,
-          decodeParams = layerModel.decodeParams,
-          decodeFunction = layerModel.decodeFunction;
-
-
-      if (mapLayer.group) {
-        mapLayer.eachLayer(function (l) {
-          if (l.reDraw) l.reDraw({ decodeParams: decodeParams, decodeFunction: decodeFunction, params: params, sqlParams: sqlParams });
-        });
-      } else {
-        mapLayer.reDraw({ decodeParams: decodeParams, decodeFunction: decodeFunction, params: params, sqlParams: sqlParams });
-      }
-
-      return this;
-    }
-  }]);
-  return PluginLeaflet;
-}();
-
-export default LayerManager;
-export { PluginLeaflet, replace, substitution, concatenation };
+export { PluginLeaflet, concatenation, LayerManager as default, replace, substitution };

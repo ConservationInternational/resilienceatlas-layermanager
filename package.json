@@ -1,7 +1,7 @@
 {
   "name": "resilience-layer-manager",
   "private": true,
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "A library to get a layer depending on provider and layer spec",
   "repository": {
     "type": "git",
@@ -11,74 +11,76 @@
   "license": "MIT",
   "main": "lib/index.js",
   "module": "dist/layer-manager.esm.js",
-  "scripts": {
-    "serve": "http-server . -p 8000 -a 0.0.0.0",
-    "prepublishOnly": "bnr build",
-    "lint": "eslint ./src",
-    "test": "mocha --require @babel/register --require ./test/setup --recursive ./test/specs",
-    "watch": "bnr watch && bnr babel:watch",
-    "build": "bnr build && bnr babel:build",
-    "prettier": "prettier --single-quote --write \"src/**/*.js\""
-  },
-  "betterScripts": {
-    "build": {
-      "command": "rollup -c",
-      "env": {
-        "NODE_ENV": "production"
-      }
+  "exports": {
+    ".": {
+      "import": "./dist/layer-manager.esm.js",
+      "require": "./lib/index.js"
     },
-    "watch": {
-      "command": "rollup -c -w && babel src -d lib --watch",
-      "env": {
-        "BABEL_ENV": "rollup"
-      }
-    },
-    "babel:build": {
-      "command": "babel src -d lib"
-    },
-    "babel:watch": {
-      "command": "babel src -d lib --watch"
+    "./components": {
+      "import": "./dist/components/index.esm.js",
+      "require": "./lib/components/index.js"
     }
   },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "serve": "http-server . -p 8000 -a 0.0.0.0",
+    "prepublishOnly": "npm run build",
+    "lint": "eslint ./src",
+    "test": "mocha --require @babel/register --require ./test/setup --recursive ./test/specs",
+    "watch": "npm run rollup:watch & npm run babel:watch",
+    "build": "npm run rollup:build && npm run babel:build",
+    "rollup:build": "cross-env NODE_ENV=production rollup -c",
+    "rollup:watch": "cross-env BABEL_ENV=rollup rollup -c -w",
+    "babel:build": "babel src -d lib",
+    "babel:watch": "babel src -d lib --watch",
+    "prettier": "prettier --single-quote --write \"src/**/*.js\""
+  },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
-    "babel-eslint": "^8.2.2",
-    "babel-plugin-external-helpers": "^6.22.0",
-    "babel-plugin-module-resolver": "^3.1.1",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
-    "babel-preset-react": "^6.24.1",
-    "better-npm-run": "^0.1.1",
-    "chai": "^4.1.2",
-    "eslint": "5.7.0",
-    "eslint-config-airbnb": "17.1.0",
-    "eslint-config-vizzuality": "^1.3.0",
-    "eslint-import-resolver-babel-module": "4.0.0",
-    "eslint-plugin-babel": "^4.1.2",
-    "eslint-plugin-import": "2.14.0",
-    "eslint-plugin-jsx-a11y": "6.1.1",
-    "eslint-plugin-react": "7.11.0",
-    "jsdom": "^11.6.2",
-    "mocha": "^5.0.4",
-    "react": "16.3.2",
-    "react-dom": "16.3.2",
-    "rollup": "^0.66.2",
-    "rollup-plugin-babel": "3.0.7",
-    "rollup-plugin-commonjs": "^9.1.8",
-    "rollup-plugin-node-resolve": "^3.3.0",
-    "rollup-plugin-uglify": "^6.0.0",
-    "uglify-es": "^3.3.9"
+    "@babel/cli": "^7.26.0",
+    "@babel/core": "^7.26.0",
+    "@babel/plugin-transform-class-properties": "^7.25.0",
+    "@babel/plugin-transform-object-rest-spread": "^7.25.0",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.26.0",
+    "@babel/register": "^7.25.0",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^28.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "chai": "^5.1.2",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.0.0",
+    "eslint-import-resolver-babel-module": "^5.3.2",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-react": "^7.37.0",
+    "jsdom": "^26.0.0",
+    "mocha": "^11.0.0",
+    "prettier": "^3.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "rollup": "^4.28.0"
   },
   "dependencies": {
-    "axios": "^0.18.0",
-    "lodash": "^4.17.11",
-    "prop-types": "^15.6.2",
-    "supercluster": "^4.1.1",
+    "axios": "^1.7.0",
+    "lodash": "^4.17.21",
+    "prop-types": "^15.8.1",
+    "supercluster": "^8.0.1",
     "wri-json-api-serializer": "^1.0.1"
   },
   "peerDependencies": {
-    "react": "^15.0.0 || ^16.0.0"
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   }
 }

@@ -1,19 +1,19 @@
 {
-  "presets": ["env", "react"],
-  "plugins": [
-    "transform-class-properties",
-    [
-      "transform-object-rest-spread",
-      {
-        "useBuiltIns": true
+  "presets": [
+    ["@babel/preset-env", {
+      "targets": {
+        "node": "24"
       }
-    ],
+    }],
+    "@babel/preset-react"
+  ],
+  "plugins": [
+    "@babel/plugin-transform-class-properties",
+    "@babel/plugin-transform-object-rest-spread",
     [
       "module-resolver",
       {
-        "root": [
-          "./src/**"
-        ],
+        "root": ["./src"],
         "extensions": [".js", ".jsx"]
       }
     ]
