@@ -320,6 +320,10 @@ class LayerManager {
         this.onLayerError({
           layerId: layerModel.id,
           layerName: layerModel.name || layerModel.id,
+          errorType: 'layer',
+          errorDescription: 'Failed to load layer data',
+          provider: layerModel.provider,
+          url: error.config?.url || null,
           error,
           timestamp: Date.now()
         });
@@ -363,6 +367,20 @@ class LayerManager {
       // Mark bounds request as failed to prevent infinite retries
       this.failedLayers[promiseHash] = { error, timestamp: Date.now() };
       console.error(`Error loading bounds for layer ${layerModel.id}:`, error);
+      
+      // Call error callback if provided (bounds errors are less critical, include context)
+      if (this.onLayerError) {
+        this.onLayerError({
+          layerId: layerModel.id,
+          layerName: layerModel.name || layerModel.id,
+          errorType: 'bounds',
+          errorDescription: 'Failed to load layer boundaries',
+          provider: layerModel.provider,
+          url: error.config?.url || null,
+          error,
+          timestamp: Date.now()
+        });
+      }
     });
 
     return this;
