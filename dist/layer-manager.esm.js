@@ -101,6 +101,7 @@ class LayerManager {
    * Render layers
    */
   renderLayers() {
+    console.log('[LayerManager] renderLayers called, layers count:', this.layers.length);
     if (this.layers.length > 0) {
       this.layers.forEach(layerModel => {
         const {
@@ -113,6 +114,12 @@ class LayerManager {
         } = changedAttributes;
         const hasChanged = Object.keys(changedAttributes).length > 0;
         const shouldUpdate = sqlParams || params || layerConfig;
+        console.log('[LayerManager] Processing layer:', layerModel.id, {
+          hasMapLayer: !!layerModel.mapLayer,
+          hasChanged,
+          shouldUpdate,
+          isPending: !!this.pendingRequests[layerModel.id]
+        });
 
         // If layer already exists on map and nothing changed, skip entirely
         if (layerModel.mapLayer && !hasChanged) {
@@ -133,6 +140,7 @@ class LayerManager {
 
         // Only request new layer if it doesn't exist on map yet and no request is pending
         if (!layerModel.mapLayer && !this.pendingRequests[layerModel.id]) {
+          console.log('[LayerManager] Requesting new layer:', layerModel.id);
           this.requestLayer(layerModel);
           this.requestLayerBounds(layerModel);
         }
@@ -140,10 +148,15 @@ class LayerManager {
         // reset changedAttributes
         layerModel.set('changedAttributes', {});
       });
+      console.log('[LayerManager] Promises count:', Object.keys(this.promises).length);
       if (Object.keys(this.promises).length === 0) {
+        console.log('[LayerManager] No promises, resolving immediately');
         return Promise.resolve(this.layers);
       }
-      return Promise.all(Object.values(this.promises)).then(() => this.layers).then(() => {
+      return Promise.all(Object.values(this.promises)).then(() => {
+        console.log('[LayerManager] All promises resolved');
+        return this.layers;
+      }).then(() => {
         this.promises = {};
       });
     }
