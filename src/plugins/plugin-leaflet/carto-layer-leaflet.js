@@ -1,4 +1,4 @@
-import { fetchTile, fetchBounds } from 'services/carto-service';
+import { fetchTile, fetchBounds, CANCELED } from 'services/carto-service';
 import { replace } from 'utils/query';
 
 const { L } = typeof window !== 'undefined' ? window : {};
@@ -14,6 +14,11 @@ const CartoLayer = (layerModel) => {
   return new Promise((resolve, reject) => {
     fetchTile(layerModel)
       .then((response) => {
+        // Handle canceled requests - don't process further
+        if (response === CANCELED) {
+          return; // Promise will stay pending, which is fine for canceled requests
+        }
+
         const tileUrl = `https://${response.cdn_url.https}/ra/api/v1/map/${response.layergroupid}/{z}/{x}/{y}.png`;
         const layer = L.tileLayer(tileUrl);
 
@@ -46,6 +51,11 @@ CartoLayer.getBounds = (layerModel) => {
   return new Promise((resolve, reject) => {
     fetchBounds(layerModel)
       .then((response) => {
+        // Handle canceled requests - don't process further
+        if (response === CANCELED) {
+          return; // Promise will stay pending, which is fine for canceled requests
+        }
+
         const { maxy, maxx, miny, minx } = response.rows[0];
         const bounds = [
           [maxy, maxx],

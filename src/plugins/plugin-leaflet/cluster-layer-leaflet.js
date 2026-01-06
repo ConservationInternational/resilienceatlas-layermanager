@@ -1,5 +1,5 @@
 /* eslint no-underscore-dangle: 0 */
-import { fetchData } from 'services/cluster-service';
+import { fetchData, CANCELED } from 'services/cluster-service';
 import Supercluster from 'supercluster';
 
 const { L } = typeof window !== 'undefined' ? window : {};
@@ -80,6 +80,11 @@ const ClusterLayer = L && L.GeoJSON.extend({
 
     fetchData(layerModel)
       .then((response) => {
+        // Handle canceled requests - don't process further
+        if (response === CANCELED) {
+          return;
+        }
+
         const features = decodeClusters(response);
         this.supercluster.load(features);
         this.update();

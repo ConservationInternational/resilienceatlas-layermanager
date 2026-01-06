@@ -549,6 +549,9 @@ var replace = function replace(originalStr) {
   return str;
 };
 
+// Symbol to indicate a canceled request
+var CANCELED = Symbol('CANCELED');
+
 var fetchTile = function fetchTile(layerModel) {
   var layerConfig = layerModel.layerConfig,
       params = layerModel.params,
@@ -588,6 +591,12 @@ var fetchTile = function fetchTile(layerModel) {
     }
 
     return res.data;
+  }).catch(function (err) {
+    // Silently handle canceled requests - return CANCELED symbol instead of rejecting
+    if (axios.isCancel(err)) {
+      return CANCELED;
+    }
+    throw err;
   });
 
   return newLayerRequest;
@@ -627,6 +636,12 @@ var fetchBounds = function fetchBounds(layerModel) {
     }
 
     return res.data;
+  }).catch(function (err) {
+    // Silently handle canceled requests - return CANCELED symbol instead of rejecting
+    if (axios.isCancel(err)) {
+      return CANCELED;
+    }
+    throw err;
   });
 
   return newBoundsRequest;
@@ -647,6 +662,11 @@ var CartoLayer = function CartoLayer(layerModel) {
 
   return new Promise(function (resolve, reject) {
     fetchTile(layerModel).then(function (response) {
+      // Handle canceled requests - don't process further
+      if (response === CANCELED) {
+        return; // Promise will stay pending, which is fine for canceled requests
+      }
+
       var tileUrl = 'https://' + response.cdn_url.https + '/ra/api/v1/map/' + response.layergroupid + '/{z}/{x}/{y}.png';
       var layer = L.tileLayer(tileUrl);
 
@@ -679,6 +699,11 @@ CartoLayer.getBounds = function (layerModel) {
 
   return new Promise(function (resolve, reject) {
     fetchBounds(layerModel).then(function (response) {
+      // Handle canceled requests - don't process further
+      if (response === CANCELED) {
+        return; // Promise will stay pending, which is fine for canceled requests
+      }
+
       var _response$rows$ = response.rows[0],
           maxy = _response$rows$.maxy,
           maxx = _response$rows$.maxx,
@@ -889,6 +914,9 @@ var CanvasLayer = L$1 && L$1.GridLayer.extend({
   }
 });
 
+// Symbol to indicate a canceled request
+var CANCELED$1 = Symbol('CANCELED');
+
 var fetchData = function fetchData(layerModel) {
   var layerConfig = layerModel.layerConfig,
       layerRequest = layerModel.layerRequest;
@@ -909,6 +937,12 @@ var fetchData = function fetchData(layerModel) {
     }
 
     return res.data;
+  }).catch(function (err) {
+    // Silently handle canceled requests - return CANCELED symbol instead of rejecting
+    if (axios.isCancel(err)) {
+      return CANCELED$1;
+    }
+    throw err;
   });
 
   return newLayerRequest;
@@ -1567,6 +1601,11 @@ var ClusterLayer = L$2 && L$2.GeoJSON.extend({
     }, clusterConfig));
 
     fetchData(layerModel).then(function (response) {
+      // Handle canceled requests - don't process further
+      if (response === CANCELED$1) {
+        return;
+      }
+
       var features = decodeClusters(response);
       _this.supercluster.load(features);
       _this.update();

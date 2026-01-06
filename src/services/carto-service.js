@@ -1,6 +1,9 @@
-import { CancelToken } from 'axios';
+import axios, { CancelToken } from 'axios';
 import { get } from 'lib/request';
 import { replace } from 'utils/query';
+
+// Symbol to indicate a canceled request
+export const CANCELED = Symbol('CANCELED');
 
 export const fetchTile = (layerModel) => {
   const { layerConfig, params, sqlParams, interactivity } = layerModel;
@@ -31,14 +34,22 @@ export const fetchTile = (layerModel) => {
   const layerRequestSource = CancelToken.source();
   layerModel.set('layerRequest', layerRequestSource);
 
-  const newLayerRequest = get(url, { cancelToken: layerRequestSource.token }).then((res) => {
-    if (res.status > 400) {
-      console.error(res);
-      return false;
-    }
+  const newLayerRequest = get(url, { cancelToken: layerRequestSource.token })
+    .then((res) => {
+      if (res.status > 400) {
+        console.error(res);
+        return false;
+      }
 
-    return res.data;
-  });
+      return res.data;
+    })
+    .catch((err) => {
+      // Silently handle canceled requests - return CANCELED symbol instead of rejecting
+      if (axios.isCancel(err)) {
+        return CANCELED;
+      }
+      throw err;
+    });
 
   return newLayerRequest;
 };
@@ -74,14 +85,22 @@ export const fetchBounds = (layerModel) => {
   const boundsRequestSource = CancelToken.source();
   layerModel.set('boundsRequest', boundsRequestSource);
 
-  const newBoundsRequest = get(url, { cancelToken: boundsRequestSource.token }).then((res) => {
-    if (res.status > 400) {
-      console.error(res);
-      return false;
-    }
+  const newBoundsRequest = get(url, { cancelToken: boundsRequestSource.token })
+    .then((res) => {
+      if (res.status > 400) {
+        console.error(res);
+        return false;
+      }
 
-    return res.data;
-  });
+      return res.data;
+    })
+    .catch((err) => {
+      // Silently handle canceled requests - return CANCELED symbol instead of rejecting
+      if (axios.isCancel(err)) {
+        return CANCELED;
+      }
+      throw err;
+    });
 
   return newBoundsRequest;
 };
