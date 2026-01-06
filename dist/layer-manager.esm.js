@@ -119,27 +119,32 @@ class LayerManager {
         } = changedAttributes;
         const hasChanged = Object.keys(changedAttributes).length > 0;
         const shouldUpdate = sqlParams || params || layerConfig;
-        if (!shouldUpdate) {
-          // If layer exists and didn't change don't do anything
-          if (layerModel.mapLayer && !hasChanged) {
-            return false;
-          }
 
-          // In case has changed, just update it else if (
-          if (layerModel.mapLayer && hasChanged) {
-            return this.updateLayer(layerModel);
-          }
+        // If layer already exists on map and nothing changed, skip entirely
+        if (layerModel.mapLayer && !hasChanged) {
+          return;
         }
+
+        // If layer exists and only non-critical attributes changed, just update
+        if (layerModel.mapLayer && hasChanged && !shouldUpdate) {
+          this.updateLayer(layerModel);
+          layerModel.set('changedAttributes', {});
+          return;
+        }
+
+        // If layer exists and needs full update (params/config changed)
         if (layerModel.mapLayer && shouldUpdate) {
           this.updateLayer(layerModel);
         }
 
-        // adds a new promise to `this.promises` every time it gets called
-        this.requestLayer(layerModel);
-        this.requestLayerBounds(layerModel);
+        // Only request new layer if it doesn't exist on map yet
+        if (!layerModel.mapLayer) {
+          this.requestLayer(layerModel);
+          this.requestLayerBounds(layerModel);
+        }
 
         // reset changedAttributes
-        return layerModel.set('changedAttributes', {});
+        layerModel.set('changedAttributes', {});
       });
       if (Object.keys(this.promises).length === 0) {
         return Promise.resolve(this.layers);
