@@ -368,6 +368,11 @@ let LayerManager$1 = class LayerManager {
   }
   requestLayerSuccess(layerModel) {
     console.log('[LayerManager] requestLayerSuccess - adding to map:', layerModel.id, layerModel.mapLayer);
+    console.log('[LayerManager] Layer properties:', {
+      zIndex: layerModel.zIndex,
+      opacity: layerModel.opacity,
+      visibility: layerModel.visibility
+    });
     this.plugin.add(layerModel);
     console.log('[LayerManager] Layer added to map, setting properties');
     this.plugin.setZIndex(layerModel, layerModel.zIndex);
