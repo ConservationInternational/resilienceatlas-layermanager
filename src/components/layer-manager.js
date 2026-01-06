@@ -39,8 +39,12 @@ class LayerManager extends PureComponent {
     const { layers } = this.layerManager;
 
     if (layers && layers.length) {
-      // Check if any layer actually needs loading (no mapLayer yet and not pending)
-      const needsLoading = layers.some(l => !l.mapLayer && !this.layerManager.pendingRequests[l.id]);
+      // Check if any layer actually needs loading (no mapLayer yet, not pending, and not failed)
+      const needsLoading = layers.some(l => 
+        !l.mapLayer && 
+        !this.layerManager.pendingRequests[l.id] && 
+        !this.layerManager.failedLayers[l.id]
+      );
       
       if (needsLoading && onLayerLoading) {
         onLayerLoading(true);

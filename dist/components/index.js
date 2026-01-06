@@ -125,6 +125,7 @@
       this.layers = [];
       this.promises = {};
       this.pendingRequests = {}; // Track layers with in-flight requests
+      this.failedLayers = {}; // Track layers that failed to load (to prevent infinite retries)
     }
 
     /**
@@ -161,8 +162,8 @@
             this.updateLayer(layerModel);
           }
 
-          // Only request new layer if it doesn't exist on map yet and no request is pending
-          if (!layerModel.mapLayer && !this.pendingRequests[layerModel.id]) {
+          // Only request new layer if it doesn't exist on map yet, no request is pending, and it hasn't failed
+          if (!layerModel.mapLayer && !this.pendingRequests[layerModel.id] && !this.failedLayers[layerModel.id]) {
             this.requestLayer(layerModel);
             this.requestLayerBounds(layerModel);
           }
@@ -359,8 +360,14 @@
         this.requestLayerSuccess(layerModel);
         this.setEvents(layerModel);
       }).catch(error => {
-        // Clear pending flag on error too
+        // Clear pending flag on error
         delete this.pendingRequests[layerModel.id];
+        // Mark layer as failed to prevent infinite retries
+        this.failedLayers[layerModel.id] = {
+          error,
+          timestamp: Date.now()
+        };
+        layerModel.set('loadError', error);
         console.error(`Error loading layer ${layerModel.id}:`, error);
       });
       return this;
@@ -394,6 +401,11 @@
         layerModel.set('mapLayerBounds', bounds);
       }).catch(error => {
         delete this.pendingRequests[promiseHash];
+        // Mark bounds request as failed to prevent infinite retries
+        this.failedLayers[promiseHash] = {
+          error,
+          timestamp: Date.now()
+        };
         console.error(`Error loading bounds for layer ${layerModel.id}:`, error);
       });
       return this;
@@ -447,8 +459,8 @@
           layers
         } = this.layerManager;
         if (layers && layers.length) {
-          // Check if any layer actually needs loading (no mapLayer yet and not pending)
-          const needsLoading = layers.some(l => !l.mapLayer && !this.layerManager.pendingRequests[l.id]);
+          // Check if any layer actually needs loading (no mapLayer yet, not pending, and not failed)
+          const needsLoading = layers.some(l => !l.mapLayer && !this.layerManager.pendingRequests[l.id] && !this.layerManager.failedLayers[l.id]);
           if (needsLoading && onLayerLoading) {
             onLayerLoading(true);
           }
