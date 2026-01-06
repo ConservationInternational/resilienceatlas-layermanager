@@ -1,5 +1,4 @@
 import isEmpty from 'lodash/isEmpty';
-import debounce from 'lodash/debounce';
 
 import LayerModel from './layer-model';
 
@@ -296,12 +295,12 @@ class LayerManager {
     return this;
   }
 
-  requestLayerSuccess = debounce((layerModel) => {
+  requestLayerSuccess(layerModel) {
     this.plugin.add(layerModel);
     this.plugin.setZIndex(layerModel, layerModel.zIndex);
     this.plugin.setOpacity(layerModel, layerModel.opacity);
     this.plugin.setVisibility(layerModel, layerModel.visibility);
-  }, 50)
+  }
 
   requestLayerBounds(layerModel) {
     const { provider } = layerModel;

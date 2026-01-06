@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('react'), require('prop-types'), require('lodash/isEmpty'), require('lodash/debounce'), require('lodash/isEqual')) :
-  typeof define === 'function' && define.amd ? define(['react', 'prop-types', 'lodash/isEmpty', 'lodash/debounce', 'lodash/isEqual'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.LayerManager = factory(global.React, global.PropTypes, global.isEmpty, global.debounce, global.isEqual));
-})(this, (function (React, PropTypes, isEmpty, debounce, isEqual) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('react'), require('prop-types'), require('lodash/isEmpty'), require('lodash/isEqual')) :
+  typeof define === 'function' && define.amd ? define(['react', 'prop-types', 'lodash/isEmpty', 'lodash/isEqual'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.LayerManager = factory(global.React, global.PropTypes, global.isEmpty, global.isEqual));
+})(this, (function (React, PropTypes, isEmpty, isEqual) { 'use strict';
 
   function _defineProperty(e, r, t) {
     return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
@@ -119,12 +119,6 @@
   }
   let LayerManager$1 = class LayerManager {
     constructor(map, Plugin) {
-      _defineProperty(this, "requestLayerSuccess", debounce(layerModel => {
-        this.plugin.add(layerModel);
-        this.plugin.setZIndex(layerModel, layerModel.zIndex);
-        this.plugin.setOpacity(layerModel, layerModel.opacity);
-        this.plugin.setVisibility(layerModel, layerModel.visibility);
-      }, 50));
       this.map = map;
       this.plugin = new Plugin(this.map);
       checkPluginProperties(this.plugin);
@@ -370,6 +364,12 @@
         console.error(`Error loading layer ${layerModel.id}:`, error);
       });
       return this;
+    }
+    requestLayerSuccess(layerModel) {
+      this.plugin.add(layerModel);
+      this.plugin.setZIndex(layerModel, layerModel.zIndex);
+      this.plugin.setOpacity(layerModel, layerModel.opacity);
+      this.plugin.setVisibility(layerModel, layerModel.visibility);
     }
     requestLayerBounds(layerModel) {
       const {

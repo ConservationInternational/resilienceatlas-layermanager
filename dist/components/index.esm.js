@@ -1,7 +1,6 @@
 import React, { PureComponent, Children, cloneElement, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import isEmpty from 'lodash/isEmpty';
-import debounce from 'lodash/debounce';
 import isEqual from 'lodash/isEqual';
 
 function _defineProperty(e, r, t) {
@@ -119,12 +118,6 @@ function checkPluginProperties(plugin) {
 }
 let LayerManager$1 = class LayerManager {
   constructor(map, Plugin) {
-    _defineProperty(this, "requestLayerSuccess", debounce(layerModel => {
-      this.plugin.add(layerModel);
-      this.plugin.setZIndex(layerModel, layerModel.zIndex);
-      this.plugin.setOpacity(layerModel, layerModel.opacity);
-      this.plugin.setVisibility(layerModel, layerModel.visibility);
-    }, 50));
     this.map = map;
     this.plugin = new Plugin(this.map);
     checkPluginProperties(this.plugin);
@@ -370,6 +363,12 @@ let LayerManager$1 = class LayerManager {
       console.error(`Error loading layer ${layerModel.id}:`, error);
     });
     return this;
+  }
+  requestLayerSuccess(layerModel) {
+    this.plugin.add(layerModel);
+    this.plugin.setZIndex(layerModel, layerModel.zIndex);
+    this.plugin.setOpacity(layerModel, layerModel.opacity);
+    this.plugin.setVisibility(layerModel, layerModel.visibility);
   }
   requestLayerBounds(layerModel) {
     const {

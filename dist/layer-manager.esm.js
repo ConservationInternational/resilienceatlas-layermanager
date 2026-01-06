@@ -1,5 +1,4 @@
 import isEmpty from 'lodash/isEmpty';
-import debounce from 'lodash/debounce';
 import isEqual from 'lodash/isEqual';
 import axios, { CancelToken } from 'axios';
 import compact from 'lodash/compact';
@@ -90,12 +89,6 @@ function checkPluginProperties(plugin) {
 }
 class LayerManager {
   constructor(map, Plugin) {
-    _defineProperty(this, "requestLayerSuccess", debounce(layerModel => {
-      this.plugin.add(layerModel);
-      this.plugin.setZIndex(layerModel, layerModel.zIndex);
-      this.plugin.setOpacity(layerModel, layerModel.opacity);
-      this.plugin.setVisibility(layerModel, layerModel.visibility);
-    }, 50));
     this.map = map;
     this.plugin = new Plugin(this.map);
     checkPluginProperties(this.plugin);
@@ -341,6 +334,12 @@ class LayerManager {
       console.error(`Error loading layer ${layerModel.id}:`, error);
     });
     return this;
+  }
+  requestLayerSuccess(layerModel) {
+    this.plugin.add(layerModel);
+    this.plugin.setZIndex(layerModel, layerModel.zIndex);
+    this.plugin.setOpacity(layerModel, layerModel.opacity);
+    this.plugin.setVisibility(layerModel, layerModel.visibility);
   }
   requestLayerBounds(layerModel) {
     const {
