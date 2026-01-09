@@ -177,11 +177,14 @@
       sql = `SELECT ST_Union(ST_Transform(ST_Envelope(the_raster_webmercator), 4326)) as the_geom FROM (${sql}) as t`;
     }
     const layerConfigParsed = layerConfig.parse === false ? layerConfig : JSON.parse(replace(JSON.stringify(layerConfig), params, sqlParams));
+
+    // Use COALESCE to handle both the_geom and the_geom_webmercator columns
+    // Transform the_geom_webmercator (SRID 3857) to WGS84 (SRID 4326) for bounds calculation
     const s = `
-    SELECT ST_XMin(ST_Extent(the_geom)) as minx,
-    ST_YMin(ST_Extent(the_geom)) as miny,
-    ST_XMax(ST_Extent(the_geom)) as maxx,
-    ST_YMax(ST_Extent(the_geom)) as maxy
+    SELECT ST_XMin(ST_Extent(COALESCE(the_geom, ST_Transform(the_geom_webmercator, 4326)))) as minx,
+    ST_YMin(ST_Extent(COALESCE(the_geom, ST_Transform(the_geom_webmercator, 4326)))) as miny,
+    ST_XMax(ST_Extent(COALESCE(the_geom, ST_Transform(the_geom_webmercator, 4326)))) as maxx,
+    ST_YMax(ST_Extent(COALESCE(the_geom, ST_Transform(the_geom_webmercator, 4326)))) as maxy
     from (${sql}) as subq
   `;
     const url = `https://${layerConfigParsed.account}-cdn.resilienceatlas.org/user/ra/api/v2/sql?q=${s.replace(/\n/g, ' ')}`;
